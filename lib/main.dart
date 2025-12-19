@@ -6,8 +6,10 @@ import 'providers/auth_provider.dart';
 import 'providers/task_provider.dart';
 import 'providers/announcement_provider.dart';
 import 'providers/category_provider.dart';
+import 'providers/users_provider.dart';
 import 'routes/app_routes.dart';
 import 'screens/splash_screen.dart';
+import 'firebase_options.dart';
 
 /// Entry point of the Campus Companion app.
 ///
@@ -17,7 +19,9 @@ Future<void> main() async {
 
   // NOTE: In a real project you may want to pass platform-specific
   // FirebaseOptions here if not using the default files.
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   runApp(const CampusCompanionApp());
 }
@@ -33,6 +37,7 @@ class CampusCompanionApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
         ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => UsersProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, auth, _) {

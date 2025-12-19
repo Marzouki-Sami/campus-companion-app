@@ -21,6 +21,8 @@ class AnnouncementsListScreen extends StatefulWidget {
 class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
   String? _selectedCategoryId;
   DateTime? _selectedDateFilter;
+  String _searchQuery = '';
+  bool _searchStartsWith = true;
 
   @override
   void initState() {
@@ -43,6 +45,18 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
           .toList();
     }
 
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filtered = filtered.where((a) {
+        final title = a.title.toLowerCase();
+        final body = a.body.toLowerCase();
+        final matches = _searchStartsWith
+            ? title.startsWith(query) || body.startsWith(query)
+            : title.contains(query) || body.contains(query);
+        return matches;
+      }).toList();
+    }
+
     return filtered;
   }
 
@@ -59,6 +73,7 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Announcements'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
@@ -66,119 +81,153 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
           ),
         ],
       ),
-      body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : filteredAnnouncements.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('No announcements found.'),
-                      if (_selectedCategoryId != null || _selectedDateFilter != null)
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedCategoryId = null;
-                              _selectedDateFilter = null;
-                            });
-                          },
-                          child: const Text('Clear Filters'),
-                        ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: [
-                    // Active filters display
-                    if (_selectedCategoryId != null || _selectedDateFilter != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        color: Colors.grey.shade200,
-                        child: Wrap(
-                          spacing: 8,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search announcements...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
+          ),
+          Expanded(
+            child: provider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredAnnouncements.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (_selectedCategoryId != null)
-                              Chip(
-                                label: Text(
-                                      categoryProvider.categories
-                                          .firstWhere(
-                                            (c) => c.id == _selectedCategoryId,
-                                            orElse: () => AnnouncementCategory(
-                                                id: '', name: 'Unknown', createdAt: DateTime.now()),
-                                          )
-                                          .name,
+                            if (provider.errorMessage != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Text(
+                                  provider.errorMessage!,
+                                  style: const TextStyle(color: Colors.red),
                                 ),
-                                onDeleted: () => setState(() => _selectedCategoryId = null),
                               ),
-                            if (_selectedDateFilter != null)
-                              Chip(
-                                label: Text(
-                                  'From ${_selectedDateFilter!.toString().split(' ')[0]}',
-                                ),
-                                onDeleted: () => setState(() => _selectedDateFilter = null),
+                            const Text('No announcements found.'),
+                            if (_selectedCategoryId != null || _selectedDateFilter != null || _searchQuery.isNotEmpty)
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedCategoryId = null;
+                                    _selectedDateFilter = null;
+                                    _searchQuery = '';
+                                  });
+                                },
+                                child: const Text('Clear Filters'),
                               ),
                           ],
                         ),
-                      ),
-                    // Announcements list
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredAnnouncements.length,
-                        itemBuilder: (context, index) {
-                          final a = filteredAnnouncements[index];
-                          return Hero(
-                            tag: 'announcement_${a.id}',
-                            child: Card(
-                              child: ListTile(
-                                title: Text(a.title),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      a.body,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    if (a.categories.isNotEmpty) ...[
-                                      const SizedBox(height: 4),
-                                      Wrap(
-                                        spacing: 4,
-                                        children: a.categories.map((catId) {
-                                          final cat = categoryProvider.categories
-                                              .firstWhere(
-                                                (c) => c.id == catId,
-                                                orElse: () => AnnouncementCategory(
-                                                    id: '', name: '', createdAt: DateTime.now()),
-                                              );
-                                          return Chip(
-                                            label: Text(cat.name,
-                                                style: const TextStyle(fontSize: 10)),
-                                            padding: EdgeInsets.zero,
-                                          );
-                                        }).toList(),
+                      )
+                    : Column(
+                        children: [
+                          // Active filters display
+                          if (_selectedCategoryId != null || _selectedDateFilter != null || _searchQuery.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              color: Colors.grey.shade200,
+                              child: Wrap(
+                                spacing: 8,
+                                children: [
+                                  if (_selectedCategoryId != null)
+                                    Chip(
+                                      label: Text(
+                                            categoryProvider.categories
+                                                .firstWhere(
+                                                  (c) => c.id == _selectedCategoryId,
+                                                  orElse: () => AnnouncementCategory(
+                                                      id: '', name: 'Unknown', createdAt: DateTime.now()),
+                                                )
+                                                .name,
                                       ),
-                                    ],
-                                  ],
-                                ),
-                                trailing: Text(
-                                  '${a.createdAt.day}/${a.createdAt.month}/${a.createdAt.year}',
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                ),
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AnnouncementDetailScreen.routeName,
-                                    arguments: AnnouncementDetailArgs(announcement: a),
-                                  );
-                                },
+                                      onDeleted: () => setState(() => _selectedCategoryId = null),
+                                    ),
+                                  if (_selectedDateFilter != null)
+                                    Chip(
+                                      label: Text(
+                                        'From ${_selectedDateFilter!.toString().split(' ')[0]}',
+                                      ),
+                                      onDeleted: () => setState(() => _selectedDateFilter = null),
+                                    ),
+                                  if (_searchQuery.isNotEmpty)
+                                    Chip(
+                                      label: Text(
+                                        _searchStartsWith ? 'Starts with: $_searchQuery' : 'Contains: $_searchQuery',
+                                      ),
+                                      onDeleted: () => setState(() => _searchQuery = ''),
+                                    ),
+                                ],
                               ),
                             ),
-                          );
-                        },
+                          // Announcements list
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: filteredAnnouncements.length,
+                              itemBuilder: (context, index) {
+                                final a = filteredAnnouncements[index];
+                                return Hero(
+                                  tag: 'announcement_${a.id}',
+                                  child: Card(
+                                    child: ListTile(
+                                      title: Text(a.title),
+                                      subtitle: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            a.body,
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          if (a.categories.isNotEmpty) ...[
+                                            const SizedBox(height: 4),
+                                            Wrap(
+                                              spacing: 4,
+                                              children: a.categories.map((catId) {
+                                                final cat = categoryProvider.categories
+                                                    .firstWhere(
+                                                      (c) => c.id == catId,
+                                                      orElse: () => AnnouncementCategory(
+                                                          id: '', name: '', createdAt: DateTime.now()),
+                                                    );
+                                                return Chip(
+                                                  label: Text(cat.name,
+                                                      style: const TextStyle(fontSize: 10)),
+                                                  padding: EdgeInsets.zero,
+                                                );
+                                              }).toList(),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                      trailing: Text(
+                                        '${a.createdAt.day}/${a.createdAt.month}/${a.createdAt.year}',
+                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                      ),
+                                      onTap: () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          AnnouncementDetailScreen.routeName,
+                                          arguments: AnnouncementDetailArgs(announcement: a),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+          ),
+        ],
+      ),
       floatingActionButton: canEditAnnouncements
           ? FloatingActionButton(
               onPressed: () {
