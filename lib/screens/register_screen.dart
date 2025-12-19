@@ -19,12 +19,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _email = '';
   String _password = '';
   String _name = '';
+   String _role = 'student';
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
     final auth = context.read<AuthProvider>();
-    await auth.register(_email, _password, _name);
+    await auth.register(_email, _password, _name, _role);
     if (auth.errorMessage != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.errorMessage!)),
@@ -66,6 +67,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   onSaved: (v) => _password = v ?? '',
                   validator: (v) =>
                       v == null || v.isEmpty ? 'Please enter password' : null,
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(labelText: 'Role'),
+                  value: _role,
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'student',
+                      child: Text('Student'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'professor',
+                      child: Text('Professor'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'admin',
+                      child: Text('Admin'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      _role = value ?? 'student';
+                    });
+                  },
                 ),
                 const SizedBox(height: 16),
                 if (auth.isLoading)

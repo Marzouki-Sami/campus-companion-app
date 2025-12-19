@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/app_user.dart';
 import '../models/task.dart';
 import '../models/announcement.dart';
+import '../models/category.dart' show AnnouncementCategory;
 
 /// Simple wrapper around Cloud Firestore calls used in the app.
 class FirestoreService {
@@ -56,6 +57,48 @@ class FirestoreService {
     final snap = await _db.collection('announcements').orderBy('createdAt', descending: true).get();
     return snap.docs
         .map((d) => Announcement.fromMap(d.id, d.data() as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveAnnouncement(Announcement announcement) async {
+    final ref = _db.collection('announcements');
+    if (announcement.id.isEmpty) {
+      await ref.add(announcement.toMap());
+    } else {
+      await ref.doc(announcement.id).set(announcement.toMap(), SetOptions(merge: true));
+    }
+  }
+
+  Future<void> deleteAnnouncement(String announcementId) {
+    return _db.collection('announcements').doc(announcementId).delete();
+  }
+
+  // Category management (admin only)
+  Future<List<AnnouncementCategory>> fetchCategories() async {
+    final snap = await _db.collection('categories').orderBy('name').get();
+    return snap.docs
+        .map((d) => AnnouncementCategory.fromMap(d.id, d.data() as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> saveCategory(AnnouncementCategory category) async {
+    final ref = _db.collection('categories');
+    if (category.id.isEmpty) {
+      await ref.add(category.toMap());
+    } else {
+      await ref.doc(category.id).set(category.toMap(), SetOptions(merge: true));
+    }
+  }
+
+  Future<void> deleteCategory(String categoryId) {
+    return _db.collection('categories').doc(categoryId).delete();
+  }
+
+  // Fetch all users (for admin dashboard)
+  Future<List<AppUser>> fetchAllUsers() async {
+    final snap = await _db.collection('users').get();
+    return snap.docs
+        .map((d) => AppUser.fromMap(d.id, d.data() as Map<String, dynamic>))
         .toList();
   }
 }

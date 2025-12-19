@@ -27,6 +27,32 @@ class AnnouncementProvider extends ChangeNotifier {
     }
   }
 
+  Future<void> addOrUpdateAnnouncement(Announcement announcement) async {
+    _setLoading(true);
+    try {
+      await _firestoreService.saveAnnouncement(announcement);
+      await loadAnnouncements(); // Reload to get updated list
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to save announcement';
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> deleteAnnouncement(String announcementId) async {
+    _setLoading(true);
+    try {
+      await _firestoreService.deleteAnnouncement(announcementId);
+      await loadAnnouncements(); // Reload to get updated list
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = 'Failed to delete announcement';
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
