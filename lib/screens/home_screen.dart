@@ -12,7 +12,6 @@ import '../models/category.dart' show AnnouncementCategory;
 import 'announcements_list_screen.dart';
 import 'tasks_list_screen.dart';
 import 'profile_screen.dart';
-import 'settings_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'login_screen.dart';
 import 'announcement_detail_screen.dart';
@@ -50,20 +49,22 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final pages = <Widget>[
       _buildDashboard(),
-      const AnnouncementsListScreen(),
-      const TasksListScreen(),
+      _wrapWithNavigator(const AnnouncementsListScreen()),
+      _wrapWithNavigator(const TasksListScreen()),
     ];
 
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        // Show confirmation dialog when back button is pressed
+    return WillPopScope(
+      onWillPop: () async {
+        final nav = Navigator.of(context);
+        if (nav.canPop()) {
+          return true; // normal back navigation
+        }
         final shouldExit = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Exit App?'),
-            content: const Text('Do you want to exit Campus Companion?'),
+            content: const Text(
+                'You are at the start of the app. Do you want to close Campus Companion?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -76,10 +77,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         );
-        if (shouldExit == true && mounted) {
-          // Exit the app
+        if (shouldExit == true) {
           SystemNavigator.pop();
+          return false;
         }
+        return false;
       },
       child: Scaffold(
         appBar: AppBar(title: const Text('Campus Companion')),
@@ -294,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                       title: Text(t.title),
-                      subtitle: Text('${t.category}${t.description != null ? ' - ${t.description}' : ''}'),
+                      subtitle: Text(t.description != null ? t.description! : (t.dueDate != null ? 'Due: ${t.dueDate!.toLocal().toString().split(' ')[0]}' : 'No due date')),
                     );
                   }).toList(),
               ],
@@ -443,14 +445,6 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushNamed(context, ProfileScreen.routeName);
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: const Text('Settings'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, SettingsScreen.routeName);
-            },
-          ),
           if (role == 'admin')
             ListTile(
               leading: const Icon(Icons.dashboard),
@@ -477,6 +471,20 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _wrapWithNavigator(Widget child) {
+    return WillPopScope(
+      onWillPop: () async {
+        final nav = Navigator.of(context);
+        if (nav.canPop()) {
+          nav.pop();
+          return false;
+        }
+        return false;
+      },
+      child: child,
     );
   }
 }

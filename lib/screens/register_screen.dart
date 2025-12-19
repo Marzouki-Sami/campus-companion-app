@@ -19,7 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _email = '';
   String _password = '';
   String _name = '';
-   String _role = 'student';
+  String _role = 'student';
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -70,7 +70,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(labelText: 'Role'),
+                  decoration: const InputDecoration(
+                    labelText: 'Role',
+                    helperText: 'Admins assign roles. Choose Student or Professor.',
+                  ),
                   value: _role,
                   items: const [
                     DropdownMenuItem(
@@ -80,10 +83,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     DropdownMenuItem(
                       value: 'professor',
                       child: Text('Professor'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'admin',
-                      child: Text('Admin'),
                     ),
                   ],
                   onChanged: (value) {
