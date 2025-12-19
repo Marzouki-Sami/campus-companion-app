@@ -11,7 +11,6 @@ import '../screens/admin_dashboard_screen.dart';
 import '../screens/tasks_list_screen.dart';
 import '../screens/task_edit_screen.dart';
 import '../screens/profile_screen.dart';
-import '../screens/settings_screen.dart';
 
 /// Central place for all named routes used in the app.
 class AppRoutes {
@@ -48,8 +47,6 @@ class AppRoutes {
         );
       case ProfileScreen.routeName:
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
-      case SettingsScreen.routeName:
-        return MaterialPageRoute(builder: (_) => const SettingsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

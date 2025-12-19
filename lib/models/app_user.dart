@@ -3,12 +3,14 @@ class AppUser {
   final String email;
   final String? displayName;
   final String role; // 'student', 'professor', 'admin'
+  final bool isSuspended;
 
   AppUser({
     required this.id,
     required this.email,
     this.displayName,
     this.role = 'student',
+    this.isSuspended = false,
   });
 
   factory AppUser.fromMap(String id, Map<String, dynamic> data) {
@@ -17,6 +19,8 @@ class AppUser {
       email: data['email'] as String? ?? '',
       displayName: data['displayName'] as String?,
       role: data['role'] as String? ?? 'student',
+      isSuspended: (data['isSuspended'] as bool?) ??
+          (data['isSuspended']?.toString().toLowerCase() == 'true'),
     );
   }
 
@@ -25,6 +29,7 @@ class AppUser {
       'email': email,
       'displayName': displayName,
       'role': role,
+      'isSuspended': isSuspended,
     };
   }
 }
