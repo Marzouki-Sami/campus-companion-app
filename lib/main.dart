@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'providers/auth_provider.dart';
 import 'providers/task_provider.dart';
 import 'providers/announcement_provider.dart';
+import 'providers/category_provider.dart';
 import 'routes/app_routes.dart';
 import 'screens/splash_screen.dart';
 
@@ -31,6 +32,7 @@ class CampusCompanionApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => AnnouncementProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, auth, _) {

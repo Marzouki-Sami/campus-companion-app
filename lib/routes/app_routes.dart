@@ -6,6 +6,8 @@ import '../screens/register_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/announcements_list_screen.dart';
 import '../screens/announcement_detail_screen.dart';
+import '../screens/announcement_edit_screen.dart';
+import '../screens/admin_dashboard_screen.dart';
 import '../screens/tasks_list_screen.dart';
 import '../screens/task_edit_screen.dart';
 import '../screens/profile_screen.dart';
@@ -29,6 +31,13 @@ class AppRoutes {
         final args = settings.arguments as AnnouncementDetailArgs;
         return MaterialPageRoute(
           builder: (_) => AnnouncementDetailScreen(args: args),
+        );
+      case AdminDashboardScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+      case AnnouncementEditScreen.routeName:
+        final args = settings.arguments as AnnouncementEditArgs?;
+        return MaterialPageRoute(
+          builder: (_) => AnnouncementEditScreen(args: args),
         );
       case TasksListScreen.routeName:
         return MaterialPageRoute(builder: (_) => const TasksListScreen());
