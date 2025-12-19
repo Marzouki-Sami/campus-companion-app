@@ -31,7 +31,7 @@ class FirestoreService {
         .orderBy('title')
         .get();
     return snap.docs
-        .map((d) => Task.fromMap(d.id, d.data() as Map<String, dynamic>))
+        .map((d) => Task.fromMap(d.id, d.data()))
         .toList();
   }
 
@@ -56,7 +56,7 @@ class FirestoreService {
   Future<List<Announcement>> fetchAnnouncements() async {
     final snap = await _db.collection('announcements').orderBy('createdAt', descending: true).get();
     return snap.docs
-        .map((d) => Announcement.fromMap(d.id, d.data() as Map<String, dynamic>))
+        .map((d) => Announcement.fromMap(d.id, d.data()))
         .toList();
   }
 
@@ -77,7 +77,7 @@ class FirestoreService {
   Future<List<AnnouncementCategory>> fetchCategories() async {
     final snap = await _db.collection('categories').orderBy('name').get();
     return snap.docs
-        .map((d) => AnnouncementCategory.fromMap(d.id, d.data() as Map<String, dynamic>))
+        .map((d) => AnnouncementCategory.fromMap(d.id, d.data()))
         .toList();
   }
 
@@ -98,7 +98,7 @@ class FirestoreService {
   Future<List<AppUser>> fetchAllUsers() async {
     final snap = await _db.collection('users').get();
     return snap.docs
-        .map((d) => AppUser.fromMap(d.id, d.data() as Map<String, dynamic>))
+        .map((d) => AppUser.fromMap(d.id, d.data()))
         .toList();
   }
 }

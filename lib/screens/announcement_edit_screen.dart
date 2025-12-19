@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/announcement.dart';
-import '../models/category.dart' show AnnouncementCategory;
 import '../providers/announcement_provider.dart';
 import '../providers/category_provider.dart';
 
