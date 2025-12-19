@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "778280424564",
+    "project_id": "compus-companion",
+    "storage_bucket": "compus-companion.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:778280424564:android:59f678673646987e616d21",
+        "android_client_info": {
+          "package_name": "com.example.campus_companion"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC5w2UbHHhZ9Xujmq177RK-_4h2j54-ThY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
