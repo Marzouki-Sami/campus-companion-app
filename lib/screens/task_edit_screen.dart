@@ -25,7 +25,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
   final _formKey = GlobalKey<FormState>();
   String _title = '';
   String _description = '';
-  String _category = 'General';
+  DateTime? _dueDate;
 
   @override
   void initState() {
@@ -34,7 +34,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     if (t != null) {
       _title = t.title;
       _description = t.description ?? '';
-      _category = t.category;
+      _dueDate = t.dueDate;
     }
   }
 
@@ -47,7 +47,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
 
     final existing = widget.args?.task;
     final task = (existing ?? Task(id: '', title: _title))
-        .copyWith(title: _title, description: _description, category: _category);
+        .copyWith(title: _title, description: _description, dueDate: _dueDate);
 
     await context.read<TaskProvider>().addOrUpdateTask(userId, task);
     if (mounted) Navigator.pop(context);
@@ -81,11 +81,31 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
                   onSaved: (v) => _description = v ?? '',
                   maxLines: 3,
                 ),
-                TextFormField(
-                  initialValue: _category,
-                  decoration: const InputDecoration(labelText: 'Category'),
-                  onSaved: (v) => _category = v ?? 'General',
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _dueDate ?? DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                    );
+                    if (date != null) {
+                      setState(() => _dueDate = date);
+                    }
+                  },
+                  label: Text(
+                    _dueDate != null
+                        ? 'Due Date: ${_dueDate!.toLocal().toString().split(' ')[0]}'
+                        : 'Set Due Date',
+                  ),
                 ),
+                if (_dueDate != null)
+                  TextButton(
+                    onPressed: () => setState(() => _dueDate = null),
+                    child: const Text('Clear Due Date'),
+                  ),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: provider.isLoading ? null : _save,

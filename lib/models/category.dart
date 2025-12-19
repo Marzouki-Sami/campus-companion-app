@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class AnnouncementCategory {
   final String id;
   final String name;
@@ -10,19 +12,29 @@ class AnnouncementCategory {
   });
 
   factory AnnouncementCategory.fromMap(String id, Map<String, dynamic> data) {
+    final dynamic raw = data['createdAt'];
+    DateTime createdAt;
+    if (raw is Timestamp) {
+      createdAt = raw.toDate();
+    } else if (raw is DateTime) {
+      createdAt = raw;
+    } else if (raw is String) {
+      createdAt = DateTime.tryParse(raw) ?? DateTime.now();
+    } else {
+      createdAt = DateTime.now();
+    }
+
     return AnnouncementCategory(
       id: id,
       name: data['name'] as String? ?? '',
-      createdAt: (data['createdAt'] as DateTime?) ??
-          DateTime.tryParse(data['createdAt']?.toString() ?? '') ??
-          DateTime.now(),
+      createdAt: createdAt,
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
       'name': name,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 

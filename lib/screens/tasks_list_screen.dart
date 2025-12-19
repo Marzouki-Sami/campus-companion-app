@@ -16,8 +16,10 @@ class TasksListScreen extends StatefulWidget {
 }
 
 class _TasksListScreenState extends State<TasksListScreen> {
-  bool? _filterByDone; // null = all, true = done only, false = not done only
-  String? _filterByCategory;
+  bool? _filterByDone;
+  bool? _filterByOverdue;
+  String _searchQuery = '';
+  bool _searchStartsWith = true;
 
   List<Task> _getFilteredTasks(List<Task> all) {
     var filtered = List<Task>.from(all);
@@ -26,17 +28,19 @@ class _TasksListScreenState extends State<TasksListScreen> {
       filtered = filtered.where((t) => t.isDone == _filterByDone).toList();
     }
 
-    if (_filterByCategory != null && _filterByCategory!.isNotEmpty) {
-      filtered = filtered.where((t) => t.category == _filterByCategory).toList();
+    if (_filterByOverdue != null) {
+      filtered = filtered.where((t) => t.isOverdue == _filterByOverdue).toList();
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      filtered = filtered.where((t) {
+        final title = t.title.toLowerCase();
+        return _searchStartsWith ? title.startsWith(query) : title.contains(query);
+      }).toList();
     }
 
     return filtered;
-  }
-
-  List<String> _getUniqueCategories(List<Task> tasks) {
-    final categories = tasks.map((t) => t.category).toSet().toList();
-    categories.sort();
-    return categories;
   }
 
   @override
@@ -52,101 +56,131 @@ class _TasksListScreenState extends State<TasksListScreen> {
     }
 
     final filteredTasks = _getFilteredTasks(provider.tasks);
-    final uniqueCategories = _getUniqueCategories(provider.tasks);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tasks'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
-            onPressed: () => _showFilters(context, uniqueCategories),
+            onPressed: () => _showFilters(context),
           ),
         ],
       ),
-      body: provider.isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : filteredTasks.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('No tasks found.'),
-                      if (_filterByDone != null || _filterByCategory != null)
-                        TextButton(
-                          onPressed: () {
-                            setState(() {
-                              _filterByDone = null;
-                              _filterByCategory = null;
-                            });
-                          },
-                          child: const Text('Clear Filters'),
-                        ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: [
-                    // Active filters display
-                    if (_filterByDone != null || _filterByCategory != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        color: Colors.grey.shade200,
-                        child: Wrap(
-                          spacing: 8,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Search tasks...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+              ),
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
+          ),
+          Expanded(
+            child: provider.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredTasks.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (_filterByDone != null)
-                              Chip(
-                                label: Text(_filterByDone! ? 'Done' : 'Not Done'),
-                                onDeleted: () => setState(() => _filterByDone = null),
-                              ),
-                            if (_filterByCategory != null)
-                              Chip(
-                                label: Text(_filterByCategory!),
-                                onDeleted: () => setState(() => _filterByCategory = null),
+                            const Text('No tasks found.'),
+                            if (_filterByDone != null || _filterByOverdue != null || _searchQuery.isNotEmpty)
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _filterByDone = null;
+                                    _filterByOverdue = null;
+                                    _searchQuery = '';
+                                  });
+                                },
+                                child: const Text('Clear Filters'),
                               ),
                           ],
                         ),
-                      ),
-                    // Tasks list
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: filteredTasks.length,
-                        itemBuilder: (context, index) {
-                          final t = filteredTasks[index];
-                          return ListTile(
-                            leading: Checkbox(
-                              value: t.isDone,
-                              onChanged: (_) {
-                                final updated = t.copyWith(isDone: !t.isDone);
-                                provider.addOrUpdateTask(userId, updated);
+                      )
+                    : Column(
+                        children: [
+                          if (_filterByDone != null || _filterByOverdue != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              color: Colors.grey.shade200,
+                              child: Wrap(
+                                spacing: 8,
+                                children: [
+                                  if (_filterByDone != null)
+                                    Chip(
+                                      label: Text(_filterByDone! ? 'Done' : 'Not Done'),
+                                      onDeleted: () => setState(() => _filterByDone = null),
+                                    ),
+                                  if (_filterByOverdue != null)
+                                    Chip(
+                                      label: Text(_filterByOverdue! ? 'Overdue' : 'On Time'),
+                                      onDeleted: () => setState(() => _filterByOverdue = null),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: filteredTasks.length,
+                              itemBuilder: (context, index) {
+                                final t = filteredTasks[index];
+                                final isOverdue = t.isOverdue;
+                                return ListTile(
+                                  leading: Checkbox(
+                                    value: t.isDone,
+                                    onChanged: (_) {
+                                      final updated = t.copyWith(isDone: !t.isDone);
+                                      provider.addOrUpdateTask(userId, updated);
+                                    },
+                                  ),
+                                  title: Text(
+                                    t.title,
+                                    style: TextStyle(
+                                      color: isOverdue ? Colors.red : Colors.black,
+                                      fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (t.description != null) Text(t.description!),
+                                      if (t.dueDate != null)
+                                        Text(
+                                          'Due: ${t.dueDate!.toLocal().toString().split(' ')[0]}',
+                                          style: TextStyle(
+                                            color: isOverdue ? Colors.red : Colors.grey,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      TaskEditScreen.routeName,
+                                      arguments: TaskEditArgs(task: t),
+                                    );
+                                  },
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () => provider.deleteTask(userId, t),
+                                  ),
+                                );
                               },
                             ),
-                            title: Text(t.title),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (t.description != null) Text(t.description!),
-                                Text('Category: ${t.category}'),
-                              ],
-                            ),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                TaskEditScreen.routeName,
-                                arguments: TaskEditArgs(task: t),
-                              );
-                            },
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () => provider.deleteTask(userId, t),
-                            ),
-                          );
-                        },
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(
@@ -160,7 +194,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
     );
   }
 
-  void _showFilters(BuildContext context, List<String> categories) {
+  void _showFilters(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -169,11 +203,9 @@ class _TasksListScreenState extends State<TasksListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Completion status filter
               const Text('Status:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              DropdownButtonFormField<bool?>(
-                value: _filterByDone,
+              DropdownButtonFormField<bool?>( value: _filterByDone,
                 decoration: const InputDecoration(labelText: 'Filter by Status'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('All Tasks')),
@@ -185,24 +217,31 @@ class _TasksListScreenState extends State<TasksListScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              // Category filter
-              const Text('Category:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Due Date:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _filterByCategory,
-                decoration: const InputDecoration(labelText: 'Filter by Category'),
-                items: [
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child: Text('All Categories'),
-                  ),
-                  ...categories.map((c) => DropdownMenuItem<String>(
-                        value: c,
-                        child: Text(c),
-                      )),
+              DropdownButtonFormField<bool?>( value: _filterByOverdue,
+                decoration: const InputDecoration(labelText: 'Filter by Due Date'),
+                items: const [
+                  DropdownMenuItem<bool?>(value: null, child: Text('All Tasks')),
+                  DropdownMenuItem<bool?>(value: false, child: Text('On Time')),
+                  DropdownMenuItem<bool?>(value: true, child: Text('Overdue')),
                 ],
                 onChanged: (value) {
-                  setState(() => _filterByCategory = value);
+                  setState(() => _filterByOverdue = value);
+                },
+              ),
+              const SizedBox(height: 16),
+              const Text('Search Type:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<bool>(
+                value: _searchStartsWith,
+                decoration: const InputDecoration(labelText: 'Search Mode'),
+                items: const [
+                  DropdownMenuItem<bool>(value: true, child: Text('Starts with')),
+                  DropdownMenuItem<bool>(value: false, child: Text('Contains')),
+                ],
+                onChanged: (value) {
+                  setState(() => _searchStartsWith = value ?? true);
                 },
               ),
             ],
@@ -213,7 +252,8 @@ class _TasksListScreenState extends State<TasksListScreen> {
             onPressed: () {
               setState(() {
                 _filterByDone = null;
-                _filterByCategory = null;
+                _filterByOverdue = null;
+                _searchQuery = '';
               });
               Navigator.pop(ctx);
             },

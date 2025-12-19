@@ -19,14 +19,67 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: user == null
             ? const Text('No user data.')
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Name: ${user.displayName ?? 'N/A'}'),
-                  const SizedBox(height: 8),
-                  Text('Email: ${user.email}'),
-                ],
-              ),
+            : _ProfileContent(),
+      ),
+    );
+  }
+}
+
+class _ProfileContent extends StatefulWidget {
+  @override
+  State<_ProfileContent> createState() => _ProfileContentState();
+}
+
+class _ProfileContentState extends State<_ProfileContent> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = context.read<AuthProvider>().currentUser;
+    _nameController = TextEditingController(text: user?.displayName ?? '');
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final user = auth.currentUser!;
+
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Email: ${user.email}'),
+          const SizedBox(height: 8),
+          Text('Role: ${user.role}'),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _nameController,
+            decoration: const InputDecoration(labelText: 'Display Name'),
+          ),
+          const SizedBox(height: 16),
+          if (auth.isLoading)
+            const CircularProgressIndicator()
+          else
+            ElevatedButton(
+              onPressed: () async {
+                await auth.updateProfile(displayName: _nameController.text.trim());
+                if (mounted) {
+                  final msg = auth.errorMessage ?? 'Profile updated';
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+                }
+              },
+              child: const Text('Save Changes'),
+            ),
+        ],
       ),
     );
   }

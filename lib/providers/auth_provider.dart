@@ -65,11 +65,23 @@ class AuthProvider extends ChangeNotifier {
     _setLoading(true);
     try {
       _errorMessage = null;
-      await _firebaseAuth.signInWithEmailAndPassword(
+      final cred = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
-      // Listener will populate _currentUser.
+      // After sign in, verify suspension status from Firestore.
+      final fbUser = cred.user;
+      if (fbUser != null) {
+        final profile = await _firestoreService.fetchUserProfile(
+          fbUser.uid,
+          fbUser.email ?? email,
+        );
+        if (profile.isSuspended) {
+          await _firebaseAuth.signOut();
+          _errorMessage =
+              'Your account has been suspended due to suspicious activity. If you believe this is a mistake, please contact support.';
+        }
+      }
     } on FirebaseAuthException catch (e) {
       _errorMessage = e.message;
     } catch (e) {
@@ -81,6 +93,33 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     await _firebaseAuth.signOut();
+  }
+
+  Future<void> updateProfile({String? displayName}) async {
+    if (_firebaseAuth.currentUser == null) return;
+    _setLoading(true);
+    try {
+      final user = _firebaseAuth.currentUser!;
+      if (displayName != null) {
+        await user.updateDisplayName(displayName);
+      }
+      final updated = AppUser(
+        id: user.uid,
+        email: user.email ?? _currentUser?.email ?? '',
+        displayName: displayName ?? _currentUser?.displayName,
+        role: _currentUser?.role ?? 'student',
+        isSuspended: _currentUser?.isSuspended ?? false,
+      );
+      await _firestoreService.saveUserProfile(updated);
+      _currentUser = updated;
+      _errorMessage = null;
+    } on FirebaseAuthException catch (e) {
+      _errorMessage = e.message;
+    } catch (e) {
+      _errorMessage = 'Failed to update profile';
+    } finally {
+      _setLoading(false);
+    }
   }
 
   void _setLoading(bool value) {
