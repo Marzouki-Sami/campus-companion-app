@@ -31,7 +31,12 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  Future<void> register(String email, String password, String displayName) async {
+  Future<void> register(
+    String email,
+    String password,
+    String displayName,
+    String role,
+  ) async {
     _setLoading(true);
     try {
       _errorMessage = null;
@@ -44,6 +49,7 @@ class AuthProvider extends ChangeNotifier {
         id: user.uid,
         email: user.email ?? email,
         displayName: displayName,
+        role: role,
       );
       await _firestoreService.saveUserProfile(_currentUser!);
     } on FirebaseAuthException catch (e) {
