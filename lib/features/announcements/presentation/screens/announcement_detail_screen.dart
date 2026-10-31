@@ -33,5 +33,3 @@ class AnnouncementDetailScreen extends StatelessWidget {
     );
   }
 }
-
-

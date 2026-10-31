@@ -9,7 +9,8 @@ class AnnouncementCategory {
   final String name;
   final DateTime createdAt;
 
-  AnnouncementCategory copyWith({String? id, String? name, DateTime? createdAt}) {
+  AnnouncementCategory copyWith(
+      {String? id, String? name, DateTime? createdAt}) {
     return AnnouncementCategory(
       id: id ?? this.id,
       name: name ?? this.name,

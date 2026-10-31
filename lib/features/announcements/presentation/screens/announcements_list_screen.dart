@@ -5,7 +5,8 @@ import 'package:campus_companion/features/announcements/presentation/providers/a
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
-import 'package:campus_companion/features/categories/domain/announcement_category.dart' show AnnouncementCategory;
+import 'package:campus_companion/features/categories/domain/announcement_category.dart'
+    show AnnouncementCategory;
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_detail_screen.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_edit_screen.dart';
 
@@ -15,7 +16,8 @@ class AnnouncementsListScreen extends StatefulWidget {
   const AnnouncementsListScreen({super.key});
 
   @override
-  State<AnnouncementsListScreen> createState() => _AnnouncementsListScreenState();
+  State<AnnouncementsListScreen> createState() =>
+      _AnnouncementsListScreenState();
 }
 
 class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
@@ -68,7 +70,8 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
     final bool canEditAnnouncements =
         auth.currentUser?.role.canManageAnnouncements ?? false;
 
-    final filteredAnnouncements = _getFilteredAnnouncements(provider.announcements);
+    final filteredAnnouncements =
+        _getFilteredAnnouncements(provider.announcements);
 
     return Scaffold(
       appBar: AppBar(
@@ -89,8 +92,10 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
               decoration: InputDecoration(
                 hintText: 'Search announcements...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
@@ -112,7 +117,9 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                                 ),
                               ),
                             const Text('No announcements found.'),
-                            if (_selectedCategoryId != null || _selectedDateFilter != null || _searchQuery.isNotEmpty)
+                            if (_selectedCategoryId != null ||
+                                _selectedDateFilter != null ||
+                                _searchQuery.isNotEmpty)
                               TextButton(
                                 onPressed: () {
                                   setState(() {
@@ -129,9 +136,12 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                     : Column(
                         children: [
                           // Active filters display
-                          if (_selectedCategoryId != null || _selectedDateFilter != null || _searchQuery.isNotEmpty)
+                          if (_selectedCategoryId != null ||
+                              _selectedDateFilter != null ||
+                              _searchQuery.isNotEmpty)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               color: Colors.grey.shade200,
                               child: Wrap(
                                 spacing: 8,
@@ -139,29 +149,39 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                                   if (_selectedCategoryId != null)
                                     Chip(
                                       label: Text(
-                                            categoryProvider.categories
-                                                .firstWhere(
-                                                  (c) => c.id == _selectedCategoryId,
-                                                  orElse: () => AnnouncementCategory(
-                                                      id: '', name: 'Unknown', createdAt: DateTime.now()),
-                                                )
-                                                .name,
+                                        categoryProvider.categories
+                                            .firstWhere(
+                                              (c) =>
+                                                  c.id == _selectedCategoryId,
+                                              orElse: () =>
+                                                  AnnouncementCategory(
+                                                      id: '',
+                                                      name: 'Unknown',
+                                                      createdAt:
+                                                          DateTime.now()),
+                                            )
+                                            .name,
                                       ),
-                                      onDeleted: () => setState(() => _selectedCategoryId = null),
+                                      onDeleted: () => setState(
+                                          () => _selectedCategoryId = null),
                                     ),
                                   if (_selectedDateFilter != null)
                                     Chip(
                                       label: Text(
                                         'From ${_selectedDateFilter!.toString().split(' ')[0]}',
                                       ),
-                                      onDeleted: () => setState(() => _selectedDateFilter = null),
+                                      onDeleted: () => setState(
+                                          () => _selectedDateFilter = null),
                                     ),
                                   if (_searchQuery.isNotEmpty)
                                     Chip(
                                       label: Text(
-                                        _searchStartsWith ? 'Starts with: $_searchQuery' : 'Contains: $_searchQuery',
+                                        _searchStartsWith
+                                            ? 'Starts with: $_searchQuery'
+                                            : 'Contains: $_searchQuery',
                                       ),
-                                      onDeleted: () => setState(() => _searchQuery = ''),
+                                      onDeleted: () =>
+                                          setState(() => _searchQuery = ''),
                                     ),
                                 ],
                               ),
@@ -178,7 +198,8 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                                     child: ListTile(
                                       title: Text(a.title),
                                       subtitle: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             a.body,
@@ -189,16 +210,23 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                                             const SizedBox(height: 4),
                                             Wrap(
                                               spacing: 4,
-                                              children: a.categories.map((catId) {
-                                                final cat = categoryProvider.categories
+                                              children:
+                                                  a.categories.map((catId) {
+                                                final cat = categoryProvider
+                                                    .categories
                                                     .firstWhere(
-                                                      (c) => c.id == catId,
-                                                      orElse: () => AnnouncementCategory(
-                                                          id: '', name: '', createdAt: DateTime.now()),
-                                                    );
+                                                  (c) => c.id == catId,
+                                                  orElse: () =>
+                                                      AnnouncementCategory(
+                                                          id: '',
+                                                          name: '',
+                                                          createdAt:
+                                                              DateTime.now()),
+                                                );
                                                 return Chip(
                                                   label: Text(cat.name,
-                                                      style: const TextStyle(fontSize: 10)),
+                                                      style: const TextStyle(
+                                                          fontSize: 10)),
                                                   padding: EdgeInsets.zero,
                                                 );
                                               }).toList(),
@@ -208,13 +236,15 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                                       ),
                                       trailing: Text(
                                         '${a.createdAt.day}/${a.createdAt.month}/${a.createdAt.year}',
-                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                        style: const TextStyle(
+                                            fontSize: 12, color: Colors.grey),
                                       ),
                                       onTap: () {
                                         Navigator.pushNamed(
                                           context,
                                           AnnouncementDetailScreen.routeName,
-                                          arguments: AnnouncementDetailArgs(announcement: a),
+                                          arguments: AnnouncementDetailArgs(
+                                              announcement: a),
                                         );
                                       },
                                     ),
@@ -243,7 +273,8 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
     );
   }
 
-  void _showFilters(BuildContext context, List<AnnouncementCategory> categories) {
+  void _showFilters(
+      BuildContext context, List<AnnouncementCategory> categories) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -252,7 +283,8 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Category:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Category:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 initialValue: _selectedCategoryId,
@@ -272,14 +304,17 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              const Text('Date Filter:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Date Filter:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () async {
                   final date = await showDatePicker(
                     context: context,
-                    initialDate: DateTime.now().subtract(const Duration(days: 30)),
-                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                    initialDate:
+                        DateTime.now().subtract(const Duration(days: 30)),
+                    firstDate:
+                        DateTime.now().subtract(const Duration(days: 365)),
                     lastDate: DateTime.now(),
                   );
                   if (date != null) {
