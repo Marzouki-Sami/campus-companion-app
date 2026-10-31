@@ -23,7 +23,8 @@
 | **Announcements** | Category chips, full-text search, time-range filter; professors and admins can publish, edit and delete |
 | **Tasks** | Due dates with relative wording ("Due tomorrow", "3 days overdue"), status and overdue filters, search, pull-to-refresh |
 | **Administration** | Tabbed dashboard to manage users (role, suspension, name) and announcement categories |
-| **Accounts** | Email/password authentication, profile editing; suspended accounts are blocked at sign-in, signed out when the app resumes, and denied by the database |
+| **Accounts** | Email/password sign-up with **email verification** (6-digit code), a strong-password policy with a live checklist, **forgot-password** by emailed code, profile editing |
+| **Account safety** | Suspended or deleted accounts are blocked at sign-in, signed out when the app resumes, and denied by the database; breached passwords are refused |
 | **Appearance** | Light, dark or system theme, remembered on the device |
 
 Access control is enforced **in the database** with Postgres Row Level Security, not only in the UI. New accounts are always created as `student`, and only an admin can change a role.
@@ -42,6 +43,16 @@ Access control is enforced **in the database** with Postgres Row Level Security,
     <td><img src="docs/screenshots/06-account.png" alt="Account" width="220" /></td>
     <td><img src="docs/screenshots/07-admin-users.png" alt="Admin dashboard" width="220" /></td>
     <td><img src="docs/screenshots/08-home-light.png" alt="Dashboard (light)" width="220" /></td>
+  </tr>
+</table>
+
+### Account security
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/10-register.png" alt="Registration with live password checklist" width="220" /></td>
+    <td><img src="docs/screenshots/11-verify-email.png" alt="Email verification code" width="220" /></td>
+    <td><img src="docs/screenshots/12-reset-password.png" alt="Reset password" width="220" /></td>
   </tr>
 </table>
 
@@ -100,6 +111,9 @@ Everything is denied by default and the [migration](supabase/migrations/20260101
 
 - Profiles are created by a database trigger, always as `student`; a trigger blocks anyone from changing roles or suspension unless they are an admin, and admins cannot change their own.
 - Suspended users can read only their own profile, so the app can tell them why they are blocked.
+- **Passwords** need 8+ characters with upper and lower case, a number and a special character. The server enforces this (`supabase/config.toml`) and the app mirrors it for instant feedback. New passwords are also checked against known breaches with the Have I Been Pwned range API: only the first 5 characters of the password's SHA-1 hash leave the device, and the check never blocks sign-up if the service is unreachable.
+- **Email verification and password reset** use a 6-digit code typed into the app (templates in [`supabase/templates`](supabase/templates)), so they work on any phone without deep-link setup. Codes expire after 15 minutes and can be re-sent once a minute.
+- Passwords are never stored or readable: Supabase Auth keeps only a bcrypt hash.
 - Announcements are saved through one SQL function so the text and its categories change atomically.
 - The [pgTAP tests](supabase/tests/database/rls.test.sql) attack these rules (self-promotion, reading other people's tasks, publishing as a student, ...) and run in CI.
 
@@ -127,7 +141,9 @@ node tool/setup_local.mjs
 flutter run --dart-define-from-file=env.json
 ```
 
-The setup script prints the demo accounts (`demostudent@…`, `demoprofessor@…`, `demoadmin@campus-companion.test`) and a random password generated for that run; set `DEMO_PASSWORD` to choose your own.
+The setup script prints the demo accounts (`demostudent@…`, `demoprofessor@…`, `demoadmin@campus-companion.test`) and a random password generated for that run; set `DEMO_PASSWORD` to choose your own. The demo accounts are already verified.
+
+To try **sign-up and password reset** locally, open the Mailpit inbox at http://127.0.0.1:54324: every email the local stack sends lands there, including your 6-digit codes.
 
 On a **physical Android phone**, forward the port so the phone can reach the local API: `adb reverse tcp:54321 tcp:54321`. Plain HTTP is only allowed in *debug* builds (see `android/app/src/debug/AndroidManifest.xml`).
 
@@ -136,8 +152,9 @@ Running without `env.json` shows a "Setup required" screen explaining the same s
 ### Use your own Supabase project
 
 1. Create a project at [supabase.com](https://supabase.com) and run the migrations: `npx supabase link --project-ref <ref>` then `npx supabase db push`.
-2. Copy `env.example.json` to `env.json` and fill in the project URL and the **publishable** key (Project Settings → API). The key is designed to ship inside the app; the policies above are what protect your data. Never put a `secret`/`service_role` key in the app.
-3. Promote your first admin in the SQL editor: `update profiles set role = 'admin' where email = 'you@example.com';`. After that, roles are managed from the in-app admin dashboard.
+2. In **Authentication**, turn on *Confirm email*, set the minimum password length to 8 with lowercase, uppercase, digits and symbols required, and paste the two templates from `supabase/templates` into the *Confirm signup* and *Reset password* email templates (they show the 6-digit code through the Token variable). Configure a real SMTP provider: Supabase's built-in sender is heavily rate-limited and meant for testing only.
+3. Copy `env.example.json` to `env.json` and fill in the project URL and the **publishable** key (Project Settings → API). The key is designed to ship inside the app; the policies above are what protect your data. Never put a `secret`/`service_role` key in the app.
+4. Promote your first admin in the SQL editor: `update profiles set role = 'admin' where email = 'you@example.com';`. After that, roles are managed from the in-app admin dashboard.
 
 ## Testing
 
