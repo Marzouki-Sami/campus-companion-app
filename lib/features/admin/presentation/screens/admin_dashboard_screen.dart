@@ -56,7 +56,7 @@ class AdminDashboardScreen extends StatelessWidget {
                 children: [
                   _Stat(label: 'Users', value: users),
                   const SizedBox(width: 12),
-                  _Stat(label: 'Announcements', value: announcements),
+                  _Stat(label: 'News', value: announcements),
                   const SizedBox(width: 12),
                   _Stat(label: 'Categories', value: categories),
                 ],

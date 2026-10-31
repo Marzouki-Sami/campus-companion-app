@@ -26,16 +26,30 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _index = _homeTab;
 
+  String? _tasksLoadedFor;
+
   @override
   void initState() {
     super.initState();
     // Provider calls notify listeners, so they must not run during build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final userId = context.read<AuthProvider>().currentUser?.id;
-      if (userId != null) context.read<TaskProvider>().loadTasks(userId);
       context.read<AnnouncementProvider>().loadAnnouncements();
       context.read<CategoryProvider>().loadCategories();
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The profile resolves asynchronously after a cold start, so tasks are
+    // loaded as soon as the signed-in user becomes known.
+    final userId = context.watch<AuthProvider>().currentUser?.id;
+    if (userId != null && userId != _tasksLoadedFor) {
+      _tasksLoadedFor = userId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.read<TaskProvider>().loadTasks(userId);
+      });
+    }
   }
 
   void _select(int index) => setState(() => _index = index);
@@ -72,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
             NavigationDestination(
               icon: Icon(Icons.campaign_outlined),
               selectedIcon: Icon(Icons.campaign),
-              label: 'Announcements',
+              label: 'News',
             ),
             NavigationDestination(
               icon: Icon(Icons.task_alt_outlined),

@@ -9,10 +9,14 @@ abstract final class AppTheme {
   static ThemeData get dark => _build(Brightness.dark);
 
   static ThemeData _build(Brightness brightness) {
-    final scheme = ColorScheme.fromSeed(
+    final generated = ColorScheme.fromSeed(
       seedColor: _seed,
       brightness: brightness,
     );
+    // Keep the brand colour vivid in light mode instead of the muted tonal one.
+    final scheme = brightness == Brightness.light
+        ? generated.copyWith(primary: _seed, onPrimary: Colors.white)
+        : generated;
     final fieldBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
     );

@@ -80,30 +80,33 @@ class DashboardTab extends StatelessWidget {
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                _StatCard(
-                  icon: Icons.check_circle_outline,
-                  value: open.length,
-                  label: 'Open tasks',
-                  onTap: onSeeAllTasks,
-                ),
-                const SizedBox(width: 12),
-                _StatCard(
-                  icon: Icons.warning_amber_rounded,
-                  value: overdue,
-                  label: 'Overdue',
-                  highlight: overdue > 0,
-                  onTap: onSeeAllTasks,
-                ),
-                const SizedBox(width: 12),
-                _StatCard(
-                  icon: Icons.campaign_outlined,
-                  value: recent,
-                  label: 'New this week',
-                  onTap: onSeeAllAnnouncements,
-                ),
-              ],
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _StatCard(
+                    icon: Icons.check_circle_outline,
+                    value: open.length,
+                    label: 'Open tasks',
+                    onTap: onSeeAllTasks,
+                  ),
+                  const SizedBox(width: 12),
+                  _StatCard(
+                    icon: Icons.warning_amber_rounded,
+                    value: overdue,
+                    label: 'Overdue',
+                    highlight: overdue > 0,
+                    onTap: onSeeAllTasks,
+                  ),
+                  const SizedBox(width: 12),
+                  _StatCard(
+                    icon: Icons.campaign_outlined,
+                    value: recent,
+                    label: 'New this week',
+                    onTap: onSeeAllAnnouncements,
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 28),
             _SectionHeader(title: 'Up next', onSeeAll: onSeeAllTasks),
