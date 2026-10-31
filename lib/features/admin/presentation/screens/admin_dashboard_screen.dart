@@ -5,7 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 import 'package:campus_companion/features/admin/presentation/providers/users_provider.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
-import 'package:campus_companion/features/categories/domain/announcement_category.dart' show AnnouncementCategory;
+import 'package:campus_companion/features/categories/domain/announcement_category.dart'
+    show AnnouncementCategory;
 import 'package:campus_companion/features/auth/domain/app_user.dart';
 import 'package:campus_companion/features/auth/domain/user_role.dart';
 
@@ -111,7 +112,8 @@ class CategoryManagementSection extends StatefulWidget {
   const CategoryManagementSection({super.key});
 
   @override
-  State<CategoryManagementSection> createState() => _CategoryManagementSectionState();
+  State<CategoryManagementSection> createState() =>
+      _CategoryManagementSectionState();
 }
 
 class UsersManagementSection extends StatefulWidget {
@@ -160,8 +162,11 @@ class _UsersManagementSectionState extends State<UsersManagementSection> {
         final user = usersProvider.users[index];
         return Card(
           child: ListTile(
-            title: Text(user.displayName?.isNotEmpty == true ? user.displayName! : '(no name)'),
-            subtitle: Text('${user.email}\nRole: ${user.role.label}${user.isSuspended ? ' (Suspended)' : ''}'),
+            title: Text(user.displayName?.isNotEmpty == true
+                ? user.displayName!
+                : '(no name)'),
+            subtitle: Text(
+                '${user.email}\nRole: ${user.role.label}${user.isSuspended ? ' (Suspended)' : ''}'),
             isThreeLine: true,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -171,9 +176,11 @@ class _UsersManagementSectionState extends State<UsersManagementSection> {
                   tooltip: 'Edit name',
                   onPressed: () => _editName(context, user),
                 ),
-                _RoleDropdown(user: user, onChanged: (updated) {
-                  context.read<UsersProvider>().updateUser(updated);
-                }),
+                _RoleDropdown(
+                    user: user,
+                    onChanged: (updated) {
+                      context.read<UsersProvider>().updateUser(updated);
+                    }),
                 IconButton(
                   tooltip: user.isSuspended ? 'Unsuspend user' : 'Suspend user',
                   icon: Icon(
@@ -181,9 +188,8 @@ class _UsersManagementSectionState extends State<UsersManagementSection> {
                     color: user.isSuspended ? Colors.green : Colors.red,
                   ),
                   onPressed: () {
-                    context
-                        .read<UsersProvider>()
-                        .updateUser(user.copyWith(isSuspended: !user.isSuspended));
+                    context.read<UsersProvider>().updateUser(
+                        user.copyWith(isSuspended: !user.isSuspended));
                   },
                 ),
               ],
@@ -260,9 +266,10 @@ class _CategoryManagementSectionState extends State<CategoryManagementSection> {
   @override
   Widget build(BuildContext context) {
     final categoryProvider = context.watch<CategoryProvider>();
-    
+
     // Filter categories based on search
-    final filteredCategories = _getFilteredCategories(categoryProvider.categories);
+    final filteredCategories =
+        _getFilteredCategories(categoryProvider.categories);
 
     return Column(
       children: [
@@ -279,10 +286,13 @@ class _CategoryManagementSectionState extends State<CategoryManagementSection> {
             decoration: InputDecoration(
               hintText: 'Search categories...',
               prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
               suffixIcon: PopupMenuButton<bool>(
-                onSelected: (value) => setState(() => _categorySearchStartsWith = value),
+                onSelected: (value) =>
+                    setState(() => _categorySearchStartsWith = value),
                 itemBuilder: (context) => [
                   PopupMenuItem(
                     value: true,
@@ -360,15 +370,18 @@ class _CategoryManagementSectionState extends State<CategoryManagementSection> {
     );
   }
 
-  List<AnnouncementCategory> _getFilteredCategories(List<AnnouncementCategory> categories) {
+  List<AnnouncementCategory> _getFilteredCategories(
+      List<AnnouncementCategory> categories) {
     if (_categorySearchQuery.isEmpty) {
       return categories;
     }
-    
+
     final query = _categorySearchQuery.toLowerCase();
     return categories.where((c) {
       final name = c.name.toLowerCase();
-      return _categorySearchStartsWith ? name.startsWith(query) : name.contains(query);
+      return _categorySearchStartsWith
+          ? name.startsWith(query)
+          : name.contains(query);
     }).toList();
   }
 
@@ -411,7 +424,8 @@ class _CategoryManagementSectionState extends State<CategoryManagementSection> {
     );
   }
 
-  void _confirmDeleteCategory(BuildContext context, AnnouncementCategory category) {
+  void _confirmDeleteCategory(
+      BuildContext context, AnnouncementCategory category) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(

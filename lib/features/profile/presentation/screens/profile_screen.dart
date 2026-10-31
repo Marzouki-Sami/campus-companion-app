@@ -17,9 +17,7 @@ class ProfileScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Profile')),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: user == null
-            ? const Text('No user data.')
-            : _ProfileContent(),
+        child: user == null ? const Text('No user data.') : _ProfileContent(),
       ),
     );
   }
@@ -85,5 +83,3 @@ class _ProfileContentState extends State<_ProfileContent> {
     );
   }
 }
-
-

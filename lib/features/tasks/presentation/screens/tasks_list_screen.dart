@@ -29,14 +29,17 @@ class _TasksListScreenState extends State<TasksListScreen> {
     }
 
     if (_filterByOverdue != null) {
-      filtered = filtered.where((t) => t.isOverdue == _filterByOverdue).toList();
+      filtered =
+          filtered.where((t) => t.isOverdue == _filterByOverdue).toList();
     }
 
     if (_searchQuery.isNotEmpty) {
       final query = _searchQuery.toLowerCase();
       filtered = filtered.where((t) {
         final title = t.title.toLowerCase();
-        return _searchStartsWith ? title.startsWith(query) : title.contains(query);
+        return _searchStartsWith
+            ? title.startsWith(query)
+            : title.contains(query);
       }).toList();
     }
 
@@ -76,8 +79,10 @@ class _TasksListScreenState extends State<TasksListScreen> {
               decoration: InputDecoration(
                 hintText: 'Search tasks...',
                 prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
@@ -91,7 +96,9 @@ class _TasksListScreenState extends State<TasksListScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             const Text('No tasks found.'),
-                            if (_filterByDone != null || _filterByOverdue != null || _searchQuery.isNotEmpty)
+                            if (_filterByDone != null ||
+                                _filterByOverdue != null ||
+                                _searchQuery.isNotEmpty)
                               TextButton(
                                 onPressed: () {
                                   setState(() {
@@ -109,20 +116,26 @@ class _TasksListScreenState extends State<TasksListScreen> {
                         children: [
                           if (_filterByDone != null || _filterByOverdue != null)
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
                               color: Colors.grey.shade200,
                               child: Wrap(
                                 spacing: 8,
                                 children: [
                                   if (_filterByDone != null)
                                     Chip(
-                                      label: Text(_filterByDone! ? 'Done' : 'Not Done'),
-                                      onDeleted: () => setState(() => _filterByDone = null),
+                                      label: Text(
+                                          _filterByDone! ? 'Done' : 'Not Done'),
+                                      onDeleted: () =>
+                                          setState(() => _filterByDone = null),
                                     ),
                                   if (_filterByOverdue != null)
                                     Chip(
-                                      label: Text(_filterByOverdue! ? 'Overdue' : 'On Time'),
-                                      onDeleted: () => setState(() => _filterByOverdue = null),
+                                      label: Text(_filterByOverdue!
+                                          ? 'Overdue'
+                                          : 'On Time'),
+                                      onDeleted: () => setState(
+                                          () => _filterByOverdue = null),
                                     ),
                                 ],
                               ),
@@ -137,26 +150,34 @@ class _TasksListScreenState extends State<TasksListScreen> {
                                   leading: Checkbox(
                                     value: t.isDone,
                                     onChanged: (_) {
-                                      final updated = t.copyWith(isDone: !t.isDone);
+                                      final updated =
+                                          t.copyWith(isDone: !t.isDone);
                                       provider.addOrUpdateTask(userId, updated);
                                     },
                                   ),
                                   title: Text(
                                     t.title,
                                     style: TextStyle(
-                                      color: isOverdue ? Colors.red : Colors.black,
-                                      fontWeight: isOverdue ? FontWeight.bold : FontWeight.normal,
+                                      color:
+                                          isOverdue ? Colors.red : Colors.black,
+                                      fontWeight: isOverdue
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
                                     ),
                                   ),
                                   subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      if (t.description != null) Text(t.description!),
+                                      if (t.description != null)
+                                        Text(t.description!),
                                       if (t.dueDate != null)
                                         Text(
                                           'Due: ${t.dueDate!.toLocal().toString().split(' ')[0]}',
                                           style: TextStyle(
-                                            color: isOverdue ? Colors.red : Colors.grey,
+                                            color: isOverdue
+                                                ? Colors.red
+                                                : Colors.grey,
                                           ),
                                         ),
                                     ],
@@ -170,7 +191,8 @@ class _TasksListScreenState extends State<TasksListScreen> {
                                   },
                                   trailing: IconButton(
                                     icon: const Icon(Icons.delete),
-                                    onPressed: () => provider.deleteTask(userId, t),
+                                    onPressed: () =>
+                                        provider.deleteTask(userId, t),
                                   ),
                                 );
                               },
@@ -203,13 +225,18 @@ class _TasksListScreenState extends State<TasksListScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Status:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Status:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              DropdownButtonFormField<bool?>( initialValue: _filterByDone,
-                decoration: const InputDecoration(labelText: 'Filter by Status'),
+              DropdownButtonFormField<bool?>(
+                initialValue: _filterByDone,
+                decoration:
+                    const InputDecoration(labelText: 'Filter by Status'),
                 items: const [
-                  DropdownMenuItem<bool?>(value: null, child: Text('All Tasks')),
-                  DropdownMenuItem<bool?>(value: false, child: Text('Not Done')),
+                  DropdownMenuItem<bool?>(
+                      value: null, child: Text('All Tasks')),
+                  DropdownMenuItem<bool?>(
+                      value: false, child: Text('Not Done')),
                   DropdownMenuItem<bool?>(value: true, child: Text('Done')),
                 ],
                 onChanged: (value) {
@@ -217,12 +244,16 @@ class _TasksListScreenState extends State<TasksListScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              const Text('Due Date:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Due Date:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              DropdownButtonFormField<bool?>( initialValue: _filterByOverdue,
-                decoration: const InputDecoration(labelText: 'Filter by Due Date'),
+              DropdownButtonFormField<bool?>(
+                initialValue: _filterByOverdue,
+                decoration:
+                    const InputDecoration(labelText: 'Filter by Due Date'),
                 items: const [
-                  DropdownMenuItem<bool?>(value: null, child: Text('All Tasks')),
+                  DropdownMenuItem<bool?>(
+                      value: null, child: Text('All Tasks')),
                   DropdownMenuItem<bool?>(value: false, child: Text('On Time')),
                   DropdownMenuItem<bool?>(value: true, child: Text('Overdue')),
                 ],
@@ -231,13 +262,15 @@ class _TasksListScreenState extends State<TasksListScreen> {
                 },
               ),
               const SizedBox(height: 16),
-              const Text('Search Type:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text('Search Type:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               DropdownButtonFormField<bool>(
                 initialValue: _searchStartsWith,
                 decoration: const InputDecoration(labelText: 'Search Mode'),
                 items: const [
-                  DropdownMenuItem<bool>(value: true, child: Text('Starts with')),
+                  DropdownMenuItem<bool>(
+                      value: true, child: Text('Starts with')),
                   DropdownMenuItem<bool>(value: false, child: Text('Contains')),
                 ],
                 onChanged: (value) {

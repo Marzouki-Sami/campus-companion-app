@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import 'package:campus_companion/features/auth/presentation/screens/splash_screen.dart';
 import 'package:campus_companion/features/auth/presentation/screens/login_screen.dart';
@@ -25,7 +25,8 @@ class AppRouter {
       case HomeScreen.routeName:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case AnnouncementsListScreen.routeName:
-        return MaterialPageRoute(builder: (_) => const AnnouncementsListScreen());
+        return MaterialPageRoute(
+            builder: (_) => const AnnouncementsListScreen());
       case AnnouncementDetailScreen.routeName:
         final args = settings.arguments as AnnouncementDetailArgs;
         return MaterialPageRoute(
@@ -56,5 +57,3 @@ class AppRouter {
     }
   }
 }
-
-

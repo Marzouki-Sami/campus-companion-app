@@ -119,5 +119,3 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     );
   }
 }
-
-
