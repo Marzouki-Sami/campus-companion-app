@@ -59,7 +59,7 @@ class _ProfileContentState extends State<_ProfileContent> {
         children: [
           Text('Email: ${user.email}'),
           const SizedBox(height: 8),
-          Text('Role: ${user.role}'),
+          Text('Role: ${user.role.label}'),
           const SizedBox(height: 16),
           TextFormField(
             controller: _nameController,
@@ -71,11 +71,12 @@ class _ProfileContentState extends State<_ProfileContent> {
           else
             ElevatedButton(
               onPressed: () async {
-                await auth.updateProfile(displayName: _nameController.text.trim());
-                if (mounted) {
-                  final msg = auth.errorMessage ?? 'Profile updated';
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-                }
+                final messenger = ScaffoldMessenger.of(context);
+                final ok =
+                    await auth.updateDisplayName(_nameController.text.trim());
+                messenger.showSnackBar(SnackBar(
+                  content: Text(ok ? 'Profile updated' : auth.errorMessage!),
+                ));
               },
               child: const Text('Save Changes'),
             ),

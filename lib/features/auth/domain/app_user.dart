@@ -1,37 +1,31 @@
-class AppUser {
-  final String id;
-  final String email;
-  final String? displayName;
-  final String role; // 'student', 'professor', 'admin'
-  final bool isSuspended;
+import 'package:campus_companion/features/auth/domain/user_role.dart';
 
-  AppUser({
+class AppUser {
+  const AppUser({
     required this.id,
     required this.email,
     this.displayName,
-    this.role = 'student',
+    this.role = UserRole.student,
     this.isSuspended = false,
   });
 
-  factory AppUser.fromMap(String id, Map<String, dynamic> data) {
+  final String id;
+  final String email;
+  final String? displayName;
+  final UserRole role;
+  final bool isSuspended;
+
+  AppUser copyWith({
+    String? displayName,
+    UserRole? role,
+    bool? isSuspended,
+  }) {
     return AppUser(
       id: id,
-      email: data['email'] as String? ?? '',
-      displayName: data['displayName'] as String?,
-      role: data['role'] as String? ?? 'student',
-      isSuspended: (data['isSuspended'] as bool?) ??
-          (data['isSuspended']?.toString().toLowerCase() == 'true'),
+      email: email,
+      displayName: displayName ?? this.displayName,
+      role: role ?? this.role,
+      isSuspended: isSuspended ?? this.isSuspended,
     );
   }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'email': email,
-      'displayName': displayName,
-      'role': role,
-      'isSuspended': isSuspended,
-    };
-  }
 }
-
-

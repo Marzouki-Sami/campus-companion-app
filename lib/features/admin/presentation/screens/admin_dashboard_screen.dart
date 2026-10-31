@@ -7,6 +7,7 @@ import 'package:campus_companion/features/admin/presentation/providers/users_pro
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/categories/domain/announcement_category.dart' show AnnouncementCategory;
 import 'package:campus_companion/features/auth/domain/app_user.dart';
+import 'package:campus_companion/features/auth/domain/user_role.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   static const routeName = '/admin-dashboard';
@@ -28,7 +29,7 @@ class AdminDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final isAdmin = auth.currentUser?.role == 'admin';
+    final isAdmin = auth.currentUser?.role.isAdmin ?? false;
 
     if (!isAdmin) {
       return Scaffold(
@@ -160,7 +161,7 @@ class _UsersManagementSectionState extends State<UsersManagementSection> {
         return Card(
           child: ListTile(
             title: Text(user.displayName?.isNotEmpty == true ? user.displayName! : '(no name)'),
-            subtitle: Text('${user.email}\nRole: ${user.role}${user.isSuspended ? ' (Suspended)' : ''}'),
+            subtitle: Text('${user.email}\nRole: ${user.role.label}${user.isSuspended ? ' (Suspended)' : ''}'),
             isThreeLine: true,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -180,14 +181,9 @@ class _UsersManagementSectionState extends State<UsersManagementSection> {
                     color: user.isSuspended ? Colors.green : Colors.red,
                   ),
                   onPressed: () {
-                    final updated = AppUser(
-                      id: user.id,
-                      email: user.email,
-                      displayName: user.displayName,
-                      role: user.role,
-                      isSuspended: !user.isSuspended,
-                    );
-                    context.read<UsersProvider>().updateUser(updated);
+                    context
+                        .read<UsersProvider>()
+                        .updateUser(user.copyWith(isSuspended: !user.isSuspended));
                   },
                 ),
               ],
@@ -217,13 +213,9 @@ class _UsersManagementSectionState extends State<UsersManagementSection> {
           ElevatedButton(
             onPressed: () {
               final name = controller.text.trim();
-              final updated = AppUser(
-                id: user.id,
-                email: user.email,
-                displayName: name.isEmpty ? null : name,
-                role: user.role,
-              );
-              context.read<UsersProvider>().updateUser(updated);
+              context
+                  .read<UsersProvider>()
+                  .updateUser(user.copyWith(displayName: name));
               Navigator.pop(ctx);
             },
             child: const Text('Save'),
@@ -241,22 +233,15 @@ class _RoleDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButton<String>(
+    return DropdownButton<UserRole>(
       value: user.role,
-      items: const [
-        DropdownMenuItem(value: 'student', child: Text('Student')),
-        DropdownMenuItem(value: 'professor', child: Text('Professor')),
-        DropdownMenuItem(value: 'admin', child: Text('Admin')),
+      items: [
+        for (final role in UserRole.values)
+          DropdownMenuItem(value: role, child: Text(role.label)),
       ],
       onChanged: (value) {
         if (value == null) return;
-        onChanged(AppUser(
-          id: user.id,
-          email: user.email,
-          displayName: user.displayName,
-          role: value,
-          isSuspended: user.isSuspended,
-        ));
+        onChanged(user.copyWith(role: value));
       },
     );
   }
@@ -303,11 +288,10 @@ class _CategoryManagementSectionState extends State<CategoryManagementSection> {
                     value: true,
                     child: Row(
                       children: [
-                        Radio<bool>(
-                          value: true,
-                          groupValue: _categorySearchStartsWith,
-                          onChanged: (_) => setState(() => _categorySearchStartsWith = true),
-                        ),
+                        Icon(_categorySearchStartsWith
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked),
+                        const SizedBox(width: 8),
                         const Text('Starts with'),
                       ],
                     ),
@@ -316,11 +300,10 @@ class _CategoryManagementSectionState extends State<CategoryManagementSection> {
                     value: false,
                     child: Row(
                       children: [
-                        Radio<bool>(
-                          value: false,
-                          groupValue: _categorySearchStartsWith,
-                          onChanged: (_) => setState(() => _categorySearchStartsWith = false),
-                        ),
+                        Icon(!_categorySearchStartsWith
+                            ? Icons.radio_button_checked
+                            : Icons.radio_button_unchecked),
+                        const SizedBox(width: 8),
                         const Text('Contains'),
                       ],
                     ),
