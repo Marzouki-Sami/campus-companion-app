@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyCIDlWE6S1x0cPswvC95pFBbtWqJUgLq1w</string>
+	<string>YOUR_VALUE</string>
 	<key>GCM_SENDER_ID</key>
-	<string>778280424564</string>
+	<string>YOUR_VALUE</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.campusCompanion</string>
+	<string>YOUR_VALUE</string>
 	<key>PROJECT_ID</key>
-	<string>compus-companion</string>
+	<string>YOUR_VALUE</string>
 	<key>STORAGE_BUCKET</key>
-	<string>compus-companion.firebasestorage.app</string>
+	<string>YOUR_VALUE</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:778280424564:ios:2fc2f81c4f7ecaa2616d21</string>
+	<string>YOUR_VALUE</string>
 </dict>
 </plist>

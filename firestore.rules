@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userDoc().role == 'admin';
+    }
+
+    function isProfessor() {
+      return isSignedIn() && userDoc().role == 'professor';
+    }
+
+    function isSuspended() {
+      return userDoc().get('isSuspended', false) == true;
+    }
+
+    match /users/{userId} {
+      allow read: if request.auth.uid == userId || isAdmin();
+      allow create: if request.auth.uid == userId
+        && request.resource.data.role == 'student';
+      allow update: if isAdmin()
+        || (request.auth.uid == userId
+            && !isSuspended()
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.get('isSuspended', false)
+               == resource.data.get('isSuspended', false));
+
+      match /tasks/{taskId} {
+        allow read, write: if request.auth.uid == userId && !isSuspended();
+      }
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if isSignedIn() && !isSuspended();
+      allow write: if (isProfessor() || isAdmin()) && !isSuspended();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isSignedIn() && !isSuspended();
+      allow write: if isAdmin() && !isSuspended();
+    }
+  }
+}
