@@ -84,6 +84,15 @@ class FakeAuthRepository implements AuthRepository {
     emit(null);
   }
 
+  /// Set to make [reloadCurrentUser] behave like a suspended or offline account.
+  Object? reloadError;
+
+  @override
+  Future<AppUser> reloadCurrentUser() async {
+    if (reloadError != null) throw reloadError!;
+    return _user!;
+  }
+
   @override
   Future<AppUser> updateDisplayName(AppUser user, String displayName) async {
     return _user = user.copyWith(displayName: displayName);

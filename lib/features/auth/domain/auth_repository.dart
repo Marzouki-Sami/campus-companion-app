@@ -1,8 +1,10 @@
+import 'package:campus_companion/core/errors/app_exception.dart';
 import 'package:campus_companion/features/auth/domain/app_user.dart';
 
 abstract interface class UserRepository {
-  /// Returns the stored profile, creating a default one when it does not exist.
-  Future<AppUser> fetchOrCreate(String uid, String email);
+  /// Returns the stored profile. Profiles are created by the database when an
+  /// account is created, so a missing profile is an error.
+  Future<AppUser> fetchById(String id);
 
   Future<List<AppUser>> fetchAll();
 
@@ -25,6 +27,10 @@ abstract interface class AuthRepository {
   });
 
   Future<void> signOut();
+
+  /// Re-reads the signed-in user's profile. Throws [AccountSuspendedException]
+  /// (after signing out) when the account has been suspended in the meantime.
+  Future<AppUser> reloadCurrentUser();
 
   Future<AppUser> updateDisplayName(AppUser user, String displayName);
 }
