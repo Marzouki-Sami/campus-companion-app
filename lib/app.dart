@@ -7,6 +7,7 @@ import 'package:campus_companion/features/admin/presentation/providers/users_pro
 import 'package:campus_companion/features/announcements/domain/announcement_repository.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/auth/domain/auth_repository.dart';
+import 'package:campus_companion/features/auth/domain/password_breach_checker.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/auth/presentation/screens/splash_screen.dart';
 import 'package:campus_companion/features/categories/domain/category_repository.dart';
@@ -25,6 +26,7 @@ class AppDependencies {
     required this.announcementRepository,
     required this.categoryRepository,
     required this.settingsRepository,
+    this.passwordBreachChecker = const NoPasswordBreachCheck(),
   });
 
   final AuthRepository authRepository;
@@ -33,6 +35,7 @@ class AppDependencies {
   final AnnouncementRepository announcementRepository;
   final CategoryRepository categoryRepository;
   final SettingsRepository settingsRepository;
+  final PasswordBreachChecker passwordBreachChecker;
 }
 
 class CampusCompanionApp extends StatelessWidget {
@@ -45,7 +48,10 @@ class CampusCompanionApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(dependencies.authRepository),
+          create: (_) => AuthProvider(
+            dependencies.authRepository,
+            passwordBreachChecker: dependencies.passwordBreachChecker,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => TaskProvider(dependencies.taskRepository),
