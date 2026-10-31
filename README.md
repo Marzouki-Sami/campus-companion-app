@@ -175,6 +175,8 @@ flutter build apk --release --dart-define-from-file=env.json
 
 The launcher icon is generated and reproducible: `python tool/generate_icon.py` (needs Pillow) followed by `dart run flutter_launcher_icons`.
 
+To publish the app, follow [docs/RELEASING.md](docs/RELEASING.md). Security issues: see [SECURITY.md](SECURITY.md).
+
 ## License
 
 Released under the [MIT License](LICENSE).
