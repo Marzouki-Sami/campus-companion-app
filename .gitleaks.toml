@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Firebase web API keys committed before the move to Supabase. They are identifiers, not secrets, and the code that used them is gone."
+paths = [
+  '''lib/firebase_options\.dart''',
+  '''android/app/google-services\.json''',
+]
