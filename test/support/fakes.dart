@@ -6,6 +6,32 @@ import 'package:campus_companion/features/auth/domain/auth_repository.dart';
 import 'package:campus_companion/features/tasks/domain/task.dart';
 import 'package:campus_companion/features/tasks/domain/task_repository.dart';
 
+class FakeUserRepository implements UserRepository {
+  FakeUserRepository(List<AppUser> users) : users = List.of(users);
+
+  final List<AppUser> users;
+  AppException? deleteError;
+
+  @override
+  Future<AppUser> fetchById(String id) async =>
+      users.firstWhere((u) => u.id == id);
+
+  @override
+  Future<List<AppUser>> fetchAll() async => List.of(users);
+
+  @override
+  Future<void> save(AppUser user) async {
+    final i = users.indexWhere((u) => u.id == user.id);
+    users[i] = user;
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    if (deleteError != null) throw deleteError!;
+    users.removeWhere((u) => u.id == id);
+  }
+}
+
 class FakeTaskRepository implements TaskRepository {
   final Map<String, List<Task>> _store = {};
   bool shouldFail = false;

@@ -62,4 +62,31 @@ class SupabaseUserRepository implements UserRepository {
       }
     });
   }
+
+  @override
+  Future<void> delete(String id) {
+    return guardDb(() async {
+      try {
+        await _client.functions
+            .invoke('admin-delete-user', body: {'user_id': id});
+      } on FunctionException catch (e) {
+        throw AppException(_deleteFailureMessage(e));
+      }
+    });
+  }
+
+  String _deleteFailureMessage(FunctionException e) {
+    switch (e.status) {
+      case 403:
+        return 'Only administrators can delete accounts.';
+      case 404:
+        return 'That account no longer exists.';
+      case 400:
+        final details = e.details;
+        if (details is Map && details['error'] is String) {
+          return details['error'] as String;
+        }
+    }
+    return 'Could not delete the account. Please try again.';
+  }
 }
