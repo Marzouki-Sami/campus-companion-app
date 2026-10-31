@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:campus_companion/core/errors/app_exception.dart';
 import 'package:campus_companion/features/auth/domain/app_user.dart';
 import 'package:campus_companion/features/auth/domain/user_role.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
@@ -61,5 +62,36 @@ void main() {
     await provider.login('a@b.c', 'secret');
     expect(await provider.updateDisplayName('Sami'), isTrue);
     expect(provider.currentUser?.displayName, 'Sami');
+  });
+
+  group('refreshProfile', () {
+    test('ends the session with a message when the account is suspended',
+        () async {
+      await provider.login('a@b.c', 'secret');
+      repository.reloadError = const AccountSuspendedException();
+
+      await provider.refreshProfile();
+
+      expect(provider.currentUser, isNull);
+      expect(provider.takeSessionEndedMessage(), contains('suspended'));
+      expect(provider.takeSessionEndedMessage(), isNull);
+    });
+
+    test('keeps the user when the check fails for a transient reason',
+        () async {
+      await provider.login('a@b.c', 'secret');
+      repository.reloadError = const AppException('No connection.');
+
+      await provider.refreshProfile();
+
+      expect(provider.currentUser, isNotNull);
+      expect(provider.takeSessionEndedMessage(), isNull);
+    });
+
+    test('does nothing when nobody is signed in', () async {
+      await provider.refreshProfile();
+
+      expect(provider.currentUser, isNull);
+    });
   });
 }
