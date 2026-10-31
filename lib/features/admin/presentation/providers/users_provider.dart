@@ -25,4 +25,11 @@ class UsersProvider extends ChangeNotifier with LoadingStateMixin {
       _users = await _repository.fetchAll();
     }, failureMessage: 'Failed to update user');
   }
+
+  Future<bool> deleteUser(String id) {
+    return runGuarded(() async {
+      await _repository.delete(id);
+      _users = await _repository.fetchAll();
+    }, failureMessage: 'Failed to delete user');
+  }
 }

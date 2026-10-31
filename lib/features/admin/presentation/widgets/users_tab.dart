@@ -8,7 +8,7 @@ import 'package:campus_companion/features/auth/domain/app_user.dart';
 import 'package:campus_companion/features/auth/domain/user_role.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 
-enum _UserAction { rename, student, professor, admin, toggleSuspend }
+enum _UserAction { rename, student, professor, admin, toggleSuspend, delete }
 
 class UsersTab extends StatefulWidget {
   const UsersTab({super.key});
@@ -43,6 +43,49 @@ class _UsersTabState extends State<UsersTab> {
     }
   }
 
+  Future<void> _delete(AppUser user) async {
+    final provider = context.read<UsersProvider>();
+    final messenger = ScaffoldMessenger.of(context);
+    final label = (user.displayName?.isNotEmpty ?? false)
+        ? user.displayName!
+        : user.email;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete account?'),
+        content: Text(
+          '$label and all of their tasks will be permanently deleted. '
+          'This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    final ok = await provider.deleteUser(user.id);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          ok
+              ? 'Account deleted'
+              : provider.errorMessage ?? 'Could not delete the account',
+        ),
+      ),
+    );
+  }
+
   Future<void> _onAction(AppUser user, _UserAction action) async {
     final provider = context.read<UsersProvider>();
     switch (action) {
@@ -58,6 +101,8 @@ class _UsersTabState extends State<UsersTab> {
         await provider.updateUser(
           user.copyWith(isSuspended: !user.isSuspended),
         );
+      case _UserAction.delete:
+        await _delete(user);
     }
   }
 
@@ -192,6 +237,13 @@ class _UsersTabState extends State<UsersTab> {
                                               ? null
                                               : scheme.error,
                                         ),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: _UserAction.delete,
+                                      child: Text(
+                                        'Delete account…',
+                                        style: TextStyle(color: scheme.error),
                                       ),
                                     ),
                                   ],

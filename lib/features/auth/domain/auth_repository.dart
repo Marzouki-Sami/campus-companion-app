@@ -9,6 +9,10 @@ abstract interface class UserRepository {
   Future<List<AppUser>> fetchAll();
 
   Future<void> save(AppUser user);
+
+  /// Permanently deletes an account together with its tasks. Administrators
+  /// only; users cannot delete their own account.
+  Future<void> delete(String id);
 }
 
 abstract interface class AuthRepository {
