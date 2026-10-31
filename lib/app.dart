@@ -11,6 +11,8 @@ import 'package:campus_companion/features/auth/presentation/providers/auth_provi
 import 'package:campus_companion/features/auth/presentation/screens/splash_screen.dart';
 import 'package:campus_companion/features/categories/domain/category_repository.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
+import 'package:campus_companion/features/settings/domain/settings_repository.dart';
+import 'package:campus_companion/features/settings/presentation/providers/theme_provider.dart';
 import 'package:campus_companion/features/tasks/domain/task_repository.dart';
 import 'package:campus_companion/features/tasks/presentation/providers/task_provider.dart';
 
@@ -22,6 +24,7 @@ class AppDependencies {
     required this.taskRepository,
     required this.announcementRepository,
     required this.categoryRepository,
+    required this.settingsRepository,
   });
 
   final AuthRepository authRepository;
@@ -29,6 +32,7 @@ class AppDependencies {
   final TaskRepository taskRepository;
   final AnnouncementRepository announcementRepository;
   final CategoryRepository categoryRepository;
+  final SettingsRepository settingsRepository;
 }
 
 class CampusCompanionApp extends StatelessWidget {
@@ -56,13 +60,20 @@ class CampusCompanionApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => UsersProvider(dependencies.userRepository),
         ),
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(dependencies.settingsRepository)..load(),
+        ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Campus Companion',
-        theme: AppTheme.light,
-        initialRoute: SplashScreen.routeName,
-        onGenerateRoute: AppRouter.onGenerateRoute,
+      child: Consumer<ThemeProvider>(
+        builder: (context, theme, _) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Campus Companion',
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: theme.mode,
+          initialRoute: SplashScreen.routeName,
+          onGenerateRoute: AppRouter.onGenerateRoute,
+        ),
       ),
     );
   }
