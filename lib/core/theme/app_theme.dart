@@ -1,18 +1,58 @@
 import 'package:flutter/material.dart';
 
 abstract final class AppTheme {
-  static const _seed = Colors.blue;
+  // Matches the launcher icon's indigo-to-blue gradient.
+  static const _seed = Color(0xFF3B5BE8);
 
-  static ThemeData get light => ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: _seed),
-        useMaterial3: true,
-      );
+  static ThemeData get light => _build(Brightness.light);
 
-  static ThemeData get dark => ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _seed,
-          brightness: Brightness.dark,
+  static ThemeData get dark => _build(Brightness.dark);
+
+  static ThemeData _build(Brightness brightness) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: _seed,
+      brightness: brightness,
+    );
+    final fieldBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+    );
+
+    return ThemeData(
+      colorScheme: scheme,
+      useMaterial3: true,
+      appBarTheme: const AppBarTheme(centerTitle: true),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        color: scheme.surfaceContainerHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        useMaterial3: true,
-      );
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: fieldBorder,
+        enabledBorder: fieldBorder.copyWith(
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        focusedBorder: fieldBorder.copyWith(
+          borderSide: BorderSide(color: scheme.primary, width: 2),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+          minimumSize: const Size(160, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
 }

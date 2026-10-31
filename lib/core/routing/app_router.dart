@@ -11,6 +11,7 @@ import 'package:campus_companion/features/admin/presentation/screens/admin_dashb
 import 'package:campus_companion/features/tasks/presentation/screens/tasks_list_screen.dart';
 import 'package:campus_companion/features/tasks/presentation/screens/task_edit_screen.dart';
 import 'package:campus_companion/features/profile/presentation/screens/profile_screen.dart';
+import 'package:campus_companion/features/settings/presentation/screens/settings_screen.dart';
 
 /// Maps route names to screens.
 class AppRouter {
@@ -48,6 +49,8 @@ class AppRouter {
         );
       case ProfileScreen.routeName:
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      case SettingsScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

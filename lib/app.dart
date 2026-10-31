@@ -71,7 +71,7 @@ class CampusCompanionApp extends StatelessWidget {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: theme.mode,
-          initialRoute: SplashScreen.routeName,
+          home: const SplashScreen(),
           onGenerateRoute: AppRouter.onGenerateRoute,
         ),
       ),

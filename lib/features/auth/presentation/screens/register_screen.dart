@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:campus_companion/core/widgets/auth_scaffold.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/auth/presentation/screens/login_screen.dart';
 import 'package:campus_companion/features/home/presentation/screens/home_screen.dart';
@@ -19,74 +20,103 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String _email = '';
   String _password = '';
   String _name = '';
+  bool _obscure = true;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
     final auth = context.read<AuthProvider>();
-    await auth.register(_email, _password, _name);
-    if (auth.errorMessage != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.errorMessage!)),
-      );
-    } else if (mounted) {
+    final ok = await auth.register(_email.trim(), _password, _name.trim());
+    if (!mounted) return;
+    if (ok) {
       Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.errorMessage ?? 'Registration failed')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
+    final isLoading = context.select<AuthProvider, bool>((a) => a.isLoading);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Register')),
-      body: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: auth.isLoading ? 0.5 : 1.0,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Name'),
-                  onSaved: (v) => _name = v ?? '',
+    return AuthScaffold(
+      title: 'Create your account',
+      subtitle: 'Join Campus Companion to stay on top of campus life.',
+      children: [
+        Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  prefixIcon: Icon(Icons.person_outline),
                 ),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  onSaved: (v) => _email = v ?? '',
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Please enter email' : null,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.name],
+                onSaved: (v) => _name = v ?? '',
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.mail_outline),
                 ),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  obscureText: true,
-                  onSaved: (v) => _password = v ?? '',
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Please enter password' : null,
-                ),
-                const SizedBox(height: 16),
-                if (auth.isLoading)
-                  const CircularProgressIndicator()
-                else
-                  ElevatedButton(
-                    onPressed: _submit,
-                    child: const Text('Register'),
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                onSaved: (v) => _email = v ?? '',
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Please enter email' : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    tooltip: _obscure ? 'Show password' : 'Hide password',
+                    icon: Icon(
+                      _obscure ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () => setState(() => _obscure = !_obscure),
                   ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacementNamed(
-                        context, LoginScreen.routeName);
-                  },
-                  child: const Text('Already have an account? Login'),
                 ),
-              ],
-            ),
+                obscureText: _obscure,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                onFieldSubmitted: (_) => _submit(),
+                onSaved: (v) => _password = v ?? '',
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Please enter password' : null,
+              ),
+            ],
           ),
         ),
-      ),
+        const SizedBox(height: 24),
+        FilledButton(
+          onPressed: isLoading ? null : _submit,
+          style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+          child: isLoading
+              ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2.5),
+                )
+              : const Text('Register'),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: () => Navigator.pushReplacementNamed(
+            context,
+            LoginScreen.routeName,
+          ),
+          child: const Text('Already have an account? Login'),
+        ),
+      ],
     );
   }
 }
