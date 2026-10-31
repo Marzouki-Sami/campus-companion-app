@@ -95,6 +95,7 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
       body: SafeArea(
         child: Form(
           key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [
@@ -161,7 +162,7 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
                         width: 22,
                         child: CircularProgressIndicator(strokeWidth: 2.5),
                       )
-                    : const Text('Publish'),
+                    : Text(_existing == null ? 'Publish' : 'Save changes'),
               ),
             ],
           ),

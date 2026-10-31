@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/utils/date_format.dart';
 import 'package:campus_companion/core/widgets/empty_state.dart';
+import 'package:campus_companion/core/widgets/text_input_dialog.dart';
 import 'package:campus_companion/features/categories/domain/announcement_category.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 
@@ -26,34 +27,24 @@ class _CategoriesTabState extends State<CategoriesTab> {
 
   Future<void> _add() async {
     final provider = context.read<CategoryProvider>();
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('New category'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            labelText: 'Name',
-            hintText: 'e.g. Exams, Events, Campus life',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Add'),
-          ),
-        ],
-      ),
+    final messenger = ScaffoldMessenger.of(context);
+    final name = await showTextInputDialog(
+      context,
+      title: 'New category',
+      label: 'Name',
+      confirmLabel: 'Add',
+      hint: 'e.g. Exams, Events, Campus life',
     );
-    controller.dispose();
     if (name == null || name.isEmpty) return;
+    final exists = provider.categories.any(
+      (c) => c.name.toLowerCase() == name.toLowerCase(),
+    );
+    if (exists) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('A category named "$name" already exists.')),
+      );
+      return;
+    }
     await provider.addOrUpdateCategory(
       AnnouncementCategory(id: '', name: name, createdAt: DateTime.now()),
     );

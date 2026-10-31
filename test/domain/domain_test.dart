@@ -51,5 +51,12 @@ void main() {
       );
       expect(const Task(id: '1', title: 't').isOverdueAt(now), isFalse);
     });
+
+    test('a task due today is not overdue, even late in the day', () {
+      final dueToday =
+          Task(id: '1', title: 't', dueDate: DateTime(2026, 1, 10));
+      expect(dueToday.isOverdueAt(DateTime(2026, 1, 10, 23, 59)), isFalse);
+      expect(dueToday.isOverdueAt(DateTime(2026, 1, 11, 0, 1)), isTrue);
+    });
   });
 }

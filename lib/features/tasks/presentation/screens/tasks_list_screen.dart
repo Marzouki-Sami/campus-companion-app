@@ -22,6 +22,13 @@ class _TasksListScreenState extends State<TasksListScreen> {
   TaskStatusFilter _status = TaskStatusFilter.all;
   bool _onlyOverdue = false;
   String _query = '';
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> _confirmDelete(String userId, Task task) async {
     final provider = context.read<TaskProvider>();
@@ -86,6 +93,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
+              controller: _searchController,
               decoration: const InputDecoration(
                 hintText: 'Search tasks',
                 prefixIcon: Icon(Icons.search),
@@ -155,6 +163,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
                         _status = TaskStatusFilter.all;
                         _onlyOverdue = false;
                         _query = '';
+                        _searchController.clear();
                       }),
                       child: const Text('Clear filters'),
                     )

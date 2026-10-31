@@ -47,6 +47,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       children: [
         Form(
           key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: Column(
             children: [
               TextFormField(
@@ -69,8 +70,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
                 onSaved: (v) => _email = v ?? '',
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Please enter email' : null,
+                validator: (v) {
+                  final value = v?.trim() ?? '';
+                  if (value.isEmpty) return 'Please enter email';
+                  if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value)) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -90,8 +97,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 autofillHints: const [AutofillHints.newPassword],
                 onFieldSubmitted: (_) => _submit(),
                 onSaved: (v) => _password = v ?? '',
-                validator: (v) =>
-                    v == null || v.isEmpty ? 'Please enter password' : null,
+                validator: (v) {
+                  if (v == null || v.isEmpty) return 'Please enter password';
+                  if (v.length < 6) return 'Use at least 6 characters';
+                  return null;
+                },
               ),
             ],
           ),
