@@ -27,9 +27,7 @@ class SupabaseUserRepository implements UserRepository {
       final row =
           await _client.from('profiles').select().eq('id', id).maybeSingle();
       if (row == null) {
-        throw const AppException(
-          'Your profile could not be found. Please sign out and sign in again.',
-        );
+        throw const AccountRemovedException();
       }
       return profileFromRow(row);
     });

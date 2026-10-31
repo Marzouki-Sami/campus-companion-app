@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/widgets/auth_scaffold.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
+import 'package:campus_companion/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:campus_companion/features/auth/presentation/screens/register_screen.dart';
+import 'package:campus_companion/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:campus_companion/features/home/presentation/screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -43,6 +45,12 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (ok) {
       Navigator.pushReplacementNamed(context, HomeScreen.routeName);
+    } else if (auth.pendingVerificationEmail != null) {
+      Navigator.pushNamed(
+        context,
+        VerifyEmailScreen.routeName,
+        arguments: VerifyEmailArgs(auth.pendingVerificationEmail!),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.errorMessage ?? 'Login failed')),
@@ -112,6 +120,11 @@ class _LoginScreenState extends State<LoginScreen> {
               : const Text('Login'),
         ),
         const SizedBox(height: 8),
+        TextButton(
+          onPressed: () =>
+              Navigator.pushNamed(context, ForgotPasswordScreen.routeName),
+          child: const Text('Forgot password?'),
+        ),
         TextButton(
           onPressed: () => Navigator.pushReplacementNamed(
             context,

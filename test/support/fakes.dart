@@ -66,17 +66,64 @@ class FakeAuthRepository implements AuthRepository {
     required String password,
   }) async {
     if (error != null) throw error!;
+    if (unverifiedEmails.contains(email)) {
+      throw EmailNotVerifiedException(email);
+    }
     return _user = AppUser(id: 'u1', email: email);
   }
 
+  /// When true, sign-up behaves like a project that requires email
+  /// verification: no session until [verifyEmail] succeeds.
+  bool requireVerification = false;
+
+  /// Emails that sign-in rejects as unverified.
+  final unverifiedEmails = <String>{};
+
+  final resendCalls = <String>[];
+  final resetRequests = <String>[];
+
   @override
-  Future<AppUser> register({
+  Future<AppUser?> register({
     required String email,
     required String password,
     required String displayName,
   }) async {
     if (error != null) throw error!;
+    if (requireVerification) {
+      unverifiedEmails.add(email);
+      return null;
+    }
     return _user = AppUser(id: 'u2', email: email, displayName: displayName);
+  }
+
+  @override
+  Future<AppUser> verifyEmail({
+    required String email,
+    required String code,
+  }) async {
+    if (error != null) throw error!;
+    unverifiedEmails.remove(email);
+    return _user = AppUser(id: 'u3', email: email);
+  }
+
+  @override
+  Future<void> resendVerification(String email) async {
+    resendCalls.add(email);
+  }
+
+  @override
+  Future<void> requestPasswordReset(String email) async {
+    resetRequests.add(email);
+  }
+
+  @override
+  Future<AppUser> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    if (error != null) throw error!;
+    return _user = AppUser(id: 'u4', email: email);
   }
 
   @override
