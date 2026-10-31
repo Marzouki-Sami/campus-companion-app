@@ -17,7 +17,7 @@ jobs:
       - name: Create Firebase config from templates
         run: |
           cp lib/firebase_options.example.dart lib/firebase_options.dart
-          cp android/app/google-services.json.example android/app/google-services.json
+          sed 's/YOUR_PACKAGE_NAME/com.example.campus_companion/' android/app/google-services.json.example > android/app/google-services.json
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
@@ -39,6 +39,6 @@ jobs:
       - name: Create Firebase config from templates
         run: |
           cp lib/firebase_options.example.dart lib/firebase_options.dart
-          cp android/app/google-services.json.example android/app/google-services.json
+          sed 's/YOUR_PACKAGE_NAME/com.example.campus_companion/' android/app/google-services.json.example > android/app/google-services.json
       - run: flutter pub get
       - run: flutter build apk --debug
