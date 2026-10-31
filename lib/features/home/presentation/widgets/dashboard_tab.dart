@@ -80,33 +80,28 @@ class DashboardTab extends StatelessWidget {
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 20),
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _StatCard(
-                    icon: Icons.check_circle_outline,
-                    value: open.length,
-                    label: 'Open tasks',
-                    onTap: onSeeAllTasks,
-                  ),
-                  const SizedBox(width: 12),
-                  _StatCard(
-                    icon: Icons.warning_amber_rounded,
-                    value: overdue,
-                    label: 'Overdue',
-                    highlight: overdue > 0,
-                    onTap: onSeeAllTasks,
-                  ),
-                  const SizedBox(width: 12),
-                  _StatCard(
-                    icon: Icons.campaign_outlined,
-                    value: recent,
-                    label: 'New this week',
-                    onTap: onSeeAllAnnouncements,
-                  ),
-                ],
-              ),
+            _StatsRow(
+              stats: [
+                _StatCard(
+                  icon: Icons.check_circle_outline,
+                  value: open.length,
+                  label: 'Open tasks',
+                  onTap: onSeeAllTasks,
+                ),
+                _StatCard(
+                  icon: Icons.warning_amber_rounded,
+                  value: overdue,
+                  label: 'Overdue',
+                  highlight: overdue > 0,
+                  onTap: onSeeAllTasks,
+                ),
+                _StatCard(
+                  icon: Icons.campaign_outlined,
+                  value: recent,
+                  label: 'New this week',
+                  onTap: onSeeAllAnnouncements,
+                ),
+              ],
             ),
             const SizedBox(height: 28),
             _SectionHeader(title: 'Up next', onSeeAll: onSeeAllTasks),
@@ -118,7 +113,7 @@ class DashboardTab extends StatelessWidget {
               for (final t in open.take(3))
                 TaskTile(
                   task: t,
-                  margin: EdgeInsets.zero,
+                  margin: const EdgeInsets.symmetric(vertical: 4),
                   onToggle: () => tasks.addOrUpdateTask(
                     userId,
                     t.copyWith(isDone: true),
@@ -155,6 +150,42 @@ class DashboardTab extends StatelessWidget {
   }
 }
 
+/// Three stat cards side by side, stacked when text is scaled up so labels
+/// never break mid-word.
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({required this.stats});
+
+  final List<Widget> stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final largeText = MediaQuery.textScalerOf(context).scale(14) > 18;
+
+    if (largeText) {
+      return Column(
+        children: [
+          for (final (i, stat) in stats.indexed) ...[
+            if (i > 0) const SizedBox(height: 12),
+            SizedBox(width: double.infinity, child: stat),
+          ],
+        ],
+      );
+    }
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (i, stat) in stats.indexed) ...[
+            if (i > 0) const SizedBox(width: 12),
+            Expanded(child: stat),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.icon,
@@ -179,34 +210,31 @@ class _StatCard extends StatelessWidget {
     final foreground =
         highlight ? scheme.onErrorContainer : scheme.onPrimaryContainer;
 
-    return Expanded(
-      child: Card(
-        color: background,
-        margin: EdgeInsets.zero,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(icon, color: foreground),
-                const SizedBox(height: 12),
-                Text(
-                  '$value',
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    color: foreground,
-                    fontWeight: FontWeight.w700,
-                  ),
+    return Card(
+      color: background,
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, color: foreground),
+              const SizedBox(height: 12),
+              Text(
+                '$value',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w700,
                 ),
-                Text(
-                  label,
-                  style:
-                      theme.textTheme.labelMedium?.copyWith(color: foreground),
-                ),
-              ],
-            ),
+              ),
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(color: foreground),
+              ),
+            ],
           ),
         ),
       ),

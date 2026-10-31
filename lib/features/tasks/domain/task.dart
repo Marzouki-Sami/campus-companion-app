@@ -13,8 +13,13 @@ class Task {
   final DateTime? dueDate;
   final bool isDone;
 
-  bool isOverdueAt(DateTime now) =>
-      dueDate != null && dueDate!.isBefore(now) && !isDone;
+  /// A task is overdue once its due *day* has passed; due today is not overdue.
+  bool isOverdueAt(DateTime now) {
+    final due = dueDate;
+    if (due == null || isDone) return false;
+    final today = DateTime(now.year, now.month, now.day);
+    return DateTime(due.year, due.month, due.day).isBefore(today);
+  }
 
   bool get isOverdue => isOverdueAt(DateTime.now());
 

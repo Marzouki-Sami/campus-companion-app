@@ -98,6 +98,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
       body: SafeArea(
         child: Form(
           key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: ListView(
             padding: const EdgeInsets.all(24),
             children: [

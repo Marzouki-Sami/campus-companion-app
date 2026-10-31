@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/widgets/empty_state.dart';
+import 'package:campus_companion/core/widgets/text_input_dialog.dart';
 import 'package:campus_companion/features/admin/presentation/providers/users_provider.dart';
 import 'package:campus_companion/features/auth/domain/app_user.dart';
 import 'package:campus_companion/features/auth/domain/user_role.dart';
@@ -29,30 +30,14 @@ class _UsersTabState extends State<UsersTab> {
 
   Future<void> _rename(AppUser user) async {
     final provider = context.read<UsersProvider>();
-    final controller = TextEditingController(text: user.displayName ?? '');
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Edit display name'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: const InputDecoration(labelText: 'Display name'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+    final name = await showTextInputDialog(
+      context,
+      title: 'Edit display name',
+      label: 'Display name',
+      confirmLabel: 'Save',
+      initialValue: user.displayName ?? '',
+      capitalization: TextCapitalization.words,
     );
-    controller.dispose();
     if (name != null) {
       await provider.updateUser(user.copyWith(displayName: name));
     }

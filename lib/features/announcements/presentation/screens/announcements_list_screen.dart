@@ -32,6 +32,13 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
   String? _categoryId;
   Duration? _window;
   String _query = '';
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   List<Announcement> _filter(List<Announcement> all) {
     final needle = _query.trim().toLowerCase();
@@ -52,6 +59,7 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
         _categoryId = null;
         _window = null;
         _query = '';
+        _searchController.clear();
       });
 
   @override
@@ -68,7 +76,7 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Announcements'),
+        title: const Text('News'),
         actions: [
           PopupMenuButton<Duration?>(
             tooltip: 'Time range',
@@ -107,6 +115,7 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
+              controller: _searchController,
               decoration: const InputDecoration(
                 hintText: 'Search announcements',
                 prefixIcon: Icon(Icons.search),
