@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:campus_companion/core/errors/app_exception.dart';
 import 'package:campus_companion/core/presentation/loading_state_mixin.dart';
 import 'package:campus_companion/features/auth/domain/app_user.dart';
 import 'package:campus_companion/features/auth/domain/auth_repository.dart';
@@ -39,6 +40,31 @@ class AuthProvider extends ChangeNotifier with LoadingStateMixin {
   }
 
   Future<void> logout() => _repository.signOut();
+
+  String? _sessionEndedMessage;
+
+  /// Why the session was ended without the user asking (for example a
+  /// suspension). Returns the message once, then clears it.
+  String? takeSessionEndedMessage() {
+    final message = _sessionEndedMessage;
+    _sessionEndedMessage = null;
+    return message;
+  }
+
+  /// Re-checks the account, e.g. when the app returns to the foreground.
+  /// Transient failures (such as being offline) leave the current user as is.
+  Future<void> refreshProfile() async {
+    if (!_repository.isSignedIn || _currentUser == null) return;
+    try {
+      _currentUser = await _repository.reloadCurrentUser();
+    } on AccountSuspendedException catch (e) {
+      _sessionEndedMessage = e.message;
+      _currentUser = null;
+    } catch (_) {
+      return;
+    }
+    notifyListeners();
+  }
 
   Future<bool> updateDisplayName(String displayName) {
     final user = _currentUser;

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcements_list_screen.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
+import 'package:campus_companion/features/auth/presentation/screens/login_screen.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 import 'package:campus_companion/features/home/presentation/widgets/account_tab.dart';
 import 'package:campus_companion/features/home/presentation/widgets/dashboard_tab.dart';
@@ -19,7 +20,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   static const _homeTab = 0;
   static const _announcementsTab = 1;
   static const _tasksTab = 2;
@@ -28,9 +29,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String? _tasksLoadedFor;
 
+  bool _leaving = false;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Provider calls notify listeners, so they must not run during build.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AnnouncementProvider>().loadAnnouncements();
@@ -43,13 +47,43 @@ class _HomeScreenState extends State<HomeScreen> {
     super.didChangeDependencies();
     // The profile resolves asynchronously after a cold start, so tasks are
     // loaded as soon as the signed-in user becomes known.
-    final userId = context.watch<AuthProvider>().currentUser?.id;
+    final auth = context.watch<AuthProvider>();
+    _leaveIfSignedOut(auth);
+    final userId = auth.currentUser?.id;
     if (userId != null && userId != _tasksLoadedFor) {
       _tasksLoadedFor = userId;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.read<TaskProvider>().loadTasks(userId);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<AuthProvider>().refreshProfile();
+    }
+  }
+
+  /// Leaves the signed-in area as soon as the session has ended, whether the
+  /// user logged out or an admin suspended the account.
+  void _leaveIfSignedOut(AuthProvider auth) {
+    if (_leaving || auth.isLoggedIn || auth.currentUser != null) return;
+    _leaving = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        LoginScreen.routeName,
+        (_) => false,
+      );
+    });
   }
 
   void _select(int index) => setState(() => _index = index);

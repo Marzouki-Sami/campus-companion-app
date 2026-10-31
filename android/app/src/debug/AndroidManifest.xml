@@ -4,6 +4,6 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Lets debug builds talk to the Firebase Emulator Suite over plain HTTP. -->
+    <!-- Lets debug builds talk to a local Supabase over plain HTTP. -->
     <application android:usesCleartextTraffic="true"/>
 </manifest>
