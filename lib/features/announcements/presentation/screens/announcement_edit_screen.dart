@@ -44,7 +44,7 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
     final provider = context.read<AnnouncementProvider>();
-    
+
     final existing = widget.args?.announcement;
     final announcement = existing?.copyWith(
           title: _title,
@@ -100,24 +100,29 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
                   decoration: const InputDecoration(labelText: 'Body'),
                   onSaved: (v) => _body = v ?? '',
                   maxLines: 5,
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Please enter announcement body' : null,
+                  validator: (v) => v == null || v.isEmpty
+                      ? 'Please enter announcement body'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 // Category selection (multi-select)
-                const Text('Categories:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Categories:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 if (categoryProvider.isLoading)
                   const CircularProgressIndicator()
                 else if (categoryProvider.categories.isEmpty)
-                  const Text('No categories available. Admin must create categories first.',
+                  const Text(
+                      'No categories available. Admin must create categories first.',
                       style: TextStyle(color: Colors.grey))
                 else
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: categoryProvider.categories.map<Widget>((category) {
-                      final isSelected = _selectedCategoryIds.contains(category.id);
+                    children:
+                        categoryProvider.categories.map<Widget>((category) {
+                      final isSelected =
+                          _selectedCategoryIds.contains(category.id);
                       return FilterChip(
                         label: Text(category.name),
                         selected: isSelected,

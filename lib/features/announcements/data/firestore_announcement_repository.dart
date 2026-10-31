@@ -29,9 +29,7 @@ class FirestoreAnnouncementRepository implements AnnouncementRepository {
     if (announcement.id.isEmpty) {
       await _collection.add(data);
     } else {
-      await _collection
-          .doc(announcement.id)
-          .set(data, SetOptions(merge: true));
+      await _collection.doc(announcement.id).set(data, SetOptions(merge: true));
     }
   }
 

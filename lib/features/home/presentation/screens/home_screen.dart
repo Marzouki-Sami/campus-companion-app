@@ -8,7 +8,8 @@ import 'package:campus_companion/features/announcements/presentation/providers/a
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
 import 'package:campus_companion/features/tasks/domain/task.dart';
-import 'package:campus_companion/features/categories/domain/announcement_category.dart' show AnnouncementCategory;
+import 'package:campus_companion/features/categories/domain/announcement_category.dart'
+    show AnnouncementCategory;
 import 'package:campus_companion/features/announcements/presentation/screens/announcements_list_screen.dart';
 import 'package:campus_companion/features/tasks/presentation/screens/tasks_list_screen.dart';
 import 'package:campus_companion/features/profile/presentation/screens/profile_screen.dart';
@@ -98,7 +99,8 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
                 icon: Icon(Icons.campaign), label: 'Announcements'),
-            BottomNavigationBarItem(icon: Icon(Icons.check_box), label: 'Tasks'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.check_box), label: 'Tasks'),
           ],
         ),
       ),
@@ -114,7 +116,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Filter announcements: last month + optional category filter
     final oneMonthAgo = DateTime.now().subtract(const Duration(days: 30));
-    List<Announcement> filteredAnnouncements = announcementProvider.announcements
+    List<Announcement> filteredAnnouncements = announcementProvider
+        .announcements
         .where((a) => a.createdAt.isAfter(oneMonthAgo))
         .toList();
 
@@ -148,7 +151,8 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.school, color: Theme.of(context).colorScheme.primary),
+                    Icon(Icons.school,
+                        color: Theme.of(context).colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
                       'Campus Companion',
@@ -206,20 +210,24 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (_selectedCategoryId != null)
                         Chip(
                           label: Text(
-                                    categoryProvider.categories
-                                        .firstWhere((c) => c.id == _selectedCategoryId,
-                                            orElse: () => AnnouncementCategory(
-                                                id: '', name: 'Unknown', createdAt: DateTime.now()))
-                                        .name,
+                            categoryProvider.categories
+                                .firstWhere((c) => c.id == _selectedCategoryId,
+                                    orElse: () => AnnouncementCategory(
+                                        id: '',
+                                        name: 'Unknown',
+                                        createdAt: DateTime.now()))
+                                .name,
                           ),
-                          onDeleted: () => setState(() => _selectedCategoryId = null),
+                          onDeleted: () =>
+                              setState(() => _selectedCategoryId = null),
                         ),
                       if (_selectedDateFilter != null)
                         Chip(
                           label: Text(
                             'From ${_selectedDateFilter!.toString().split(' ')[0]}',
                           ),
-                          onDeleted: () => setState(() => _selectedDateFilter = null),
+                          onDeleted: () =>
+                              setState(() => _selectedDateFilter = null),
                         ),
                     ],
                   ),
@@ -240,12 +248,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       trailing: Wrap(
                         spacing: 4,
                         children: a.categories.map((catId) {
-                                        final cat = categoryProvider.categories
-                                            .firstWhere((c) => c.id == catId,
-                                                orElse: () => AnnouncementCategory(
-                                                    id: '', name: '', createdAt: DateTime.now()));
+                          final cat = categoryProvider.categories.firstWhere(
+                              (c) => c.id == catId,
+                              orElse: () => AnnouncementCategory(
+                                  id: '', name: '', createdAt: DateTime.now()));
                           return Chip(
-                            label: Text(cat.name, style: const TextStyle(fontSize: 10)),
+                            label: Text(cat.name,
+                                style: const TextStyle(fontSize: 10)),
                             padding: EdgeInsets.zero,
                           );
                         }).toList(),
@@ -297,7 +306,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
                       ),
                       title: Text(t.title),
-                      subtitle: Text(t.description != null ? t.description! : (t.dueDate != null ? 'Due: ${t.dueDate!.toLocal().toString().split(' ')[0]}' : 'No due date')),
+                      subtitle: Text(t.description != null
+                          ? t.description!
+                          : (t.dueDate != null
+                              ? 'Due: ${t.dueDate!.toLocal().toString().split(' ')[0]}'
+                              : 'No due date')),
                     );
                   }),
               ],
@@ -308,7 +321,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showAnnouncementFilters(BuildContext context, List<AnnouncementCategory> categories) {
+  void _showAnnouncementFilters(
+      BuildContext context, List<AnnouncementCategory> categories) {
     String? tempCategoryId = _selectedCategoryId;
     DateTime? tempDateFilter = _selectedDateFilter;
 
@@ -322,11 +336,13 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Category filter
-                const Text('Category:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Category:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   initialValue: tempCategoryId,
-                  decoration: const InputDecoration(labelText: 'Select Category'),
+                  decoration:
+                      const InputDecoration(labelText: 'Select Category'),
                   items: [
                     const DropdownMenuItem<String>(
                       value: null,
@@ -345,14 +361,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 16),
                 // Date filter
-                const Text('Date Filter:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Date Filter:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 ElevatedButton(
                   onPressed: () async {
                     final date = await showDatePicker(
                       context: dialogContext,
-                      initialDate: DateTime.now().subtract(const Duration(days: 30)),
-                      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                      initialDate:
+                          DateTime.now().subtract(const Duration(days: 30)),
+                      firstDate:
+                          DateTime.now().subtract(const Duration(days: 365)),
                       lastDate: DateTime.now(),
                     );
                     if (date != null) {
