@@ -7,11 +7,16 @@ class AuthScaffold extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.children,
+    this.showBackButton = false,
   });
 
   final String title;
   final String subtitle;
   final List<Widget> children;
+
+  /// Adds a transparent app bar with a back arrow (for screens reached from
+  /// the login flow).
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +24,12 @@ class AuthScaffold extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      appBar: showBackButton
+          ? AppBar(
+              backgroundColor: Colors.transparent,
+              scrolledUnderElevation: 0,
+            )
+          : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

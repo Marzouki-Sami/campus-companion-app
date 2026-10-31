@@ -20,10 +20,30 @@ abstract interface class AuthRepository {
   Future<AppUser> signIn({required String email, required String password});
 
   /// New accounts are always created with the student role.
-  Future<AppUser> register({
+  ///
+  /// Returns the signed-in user, or null when the email address must be
+  /// verified first (a code has been emailed; see [verifyEmail]).
+  Future<AppUser?> register({
     required String email,
     required String password,
     required String displayName,
+  });
+
+  /// Completes registration with the 6-digit code sent by email.
+  Future<AppUser> verifyEmail({required String email, required String code});
+
+  /// Sends a fresh verification code.
+  Future<void> resendVerification(String email);
+
+  /// Emails a password-reset code. Succeeds even for unknown addresses so that
+  /// accounts cannot be discovered.
+  Future<void> requestPasswordReset(String email);
+
+  /// Sets a new password using the emailed code and signs the user in.
+  Future<AppUser> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
   });
 
   Future<void> signOut();

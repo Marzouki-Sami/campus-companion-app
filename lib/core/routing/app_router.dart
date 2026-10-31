@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:campus_companion/features/auth/presentation/screens/splash_screen.dart';
 import 'package:campus_companion/features/auth/presentation/screens/login_screen.dart';
+import 'package:campus_companion/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:campus_companion/features/auth/presentation/screens/register_screen.dart';
+import 'package:campus_companion/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:campus_companion/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:campus_companion/features/home/presentation/screens/home_screen.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcements_list_screen.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_detail_screen.dart';
@@ -23,6 +26,18 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case RegisterScreen.routeName:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+      case VerifyEmailScreen.routeName:
+        final args = settings.arguments as VerifyEmailArgs;
+        return MaterialPageRoute(
+          builder: (_) => VerifyEmailScreen(args: args),
+        );
+      case ForgotPasswordScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+      case ResetPasswordScreen.routeName:
+        final args = settings.arguments as ResetPasswordArgs;
+        return MaterialPageRoute(
+          builder: (_) => ResetPasswordScreen(args: args),
+        );
       case HomeScreen.routeName:
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case AnnouncementsListScreen.routeName:
