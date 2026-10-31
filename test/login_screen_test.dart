@@ -17,7 +17,7 @@ void main() {
   testWidgets('validates required fields', (tester) async {
     await tester.pumpWidget(_app(FakeAuthRepository()));
 
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Login'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Login'));
     await tester.pump();
 
     expect(find.text('Please enter email'), findsOneWidget);
@@ -32,7 +32,7 @@ void main() {
         find.widgetWithText(TextFormField, 'Email'), 'a@b.c');
     await tester.enterText(
         find.widgetWithText(TextFormField, 'Password'), 'bad');
-    await tester.tap(find.widgetWithText(ElevatedButton, 'Login'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Login'));
     await tester.pump();
     await tester.pump();
 

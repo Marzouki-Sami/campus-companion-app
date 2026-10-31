@@ -13,27 +13,44 @@ class SettingsScreen extends StatelessWidget {
     final theme = context.watch<ThemeProvider>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: const Text('Appearance')),
       body: ListView(
+        padding: const EdgeInsets.all(24),
         children: [
-          const ListTile(
-            title: Text('Appearance'),
-            subtitle: Text('Your choice is remembered on this device.'),
+          Text(
+            'Theme',
+            style: Theme.of(context).textTheme.titleSmall,
           ),
-          for (final (mode, label) in const [
-            (ThemeMode.system, 'Follow system'),
-            (ThemeMode.light, 'Light'),
-            (ThemeMode.dark, 'Dark'),
-          ])
-            ListTile(
-              leading: Icon(
-                theme.mode == mode
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
+          const SizedBox(height: 12),
+          SegmentedButton<ThemeMode>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(
+                value: ThemeMode.system,
+                icon: Icon(Icons.brightness_auto),
+                label: Text('System'),
               ),
-              title: Text(label),
-              onTap: () => theme.setMode(mode),
-            ),
+              ButtonSegment(
+                value: ThemeMode.light,
+                icon: Icon(Icons.light_mode),
+                label: Text('Light'),
+              ),
+              ButtonSegment(
+                value: ThemeMode.dark,
+                icon: Icon(Icons.dark_mode),
+                label: Text('Dark'),
+              ),
+            ],
+            selected: {theme.mode},
+            onSelectionChanged: (v) => theme.setMode(v.first),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Your choice is remembered on this device.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
         ],
       ),
     );

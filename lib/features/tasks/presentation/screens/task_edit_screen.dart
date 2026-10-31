@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:campus_companion/core/utils/date_format.dart';
+import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/tasks/domain/task.dart';
 import 'package:campus_companion/features/tasks/presentation/providers/task_provider.dart';
-import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 
 class TaskEditArgs {
   final Task? task;
@@ -23,96 +24,143 @@ class TaskEditScreen extends StatefulWidget {
 
 class _TaskEditScreenState extends State<TaskEditScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _title = '';
-  String _description = '';
+  late final TextEditingController _title;
+  late final TextEditingController _description;
   DateTime? _dueDate;
+
+  Task? get _existing => widget.args?.task;
 
   @override
   void initState() {
     super.initState();
-    final t = widget.args?.task;
-    if (t != null) {
-      _title = t.title;
-      _description = t.description ?? '';
-      _dueDate = t.dueDate;
-    }
+    _title = TextEditingController(text: _existing?.title ?? '');
+    _description = TextEditingController(text: _existing?.description ?? '');
+    _dueDate = _existing?.dueDate;
+  }
+
+  @override
+  void dispose() {
+    _title.dispose();
+    _description.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final today = DateTime.now();
+    final current = _dueDate ?? today;
+    final earliest = current.isBefore(today) ? current : today;
+    final date = await showDatePicker(
+      context: context,
+      initialDate: current,
+      firstDate: DateTime(earliest.year, earliest.month, earliest.day),
+      lastDate: today.add(const Duration(days: 365 * 3)),
+    );
+    if (date != null) setState(() => _dueDate = date);
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
-    final auth = context.read<AuthProvider>();
-    final userId = auth.currentUser?.id;
+    final userId = context.read<AuthProvider>().currentUser?.id;
     if (userId == null) return;
 
-    final existing = widget.args?.task;
-    final task = (existing ?? Task(id: '', title: _title))
-        .copyWith(title: _title, description: _description, dueDate: _dueDate);
+    final provider = context.read<TaskProvider>();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final description = _description.text.trim();
 
-    await context.read<TaskProvider>().addOrUpdateTask(userId, task);
-    if (mounted) Navigator.pop(context);
+    final task = Task(
+      id: _existing?.id ?? '',
+      title: _title.text.trim(),
+      description: description.isEmpty ? null : description,
+      dueDate: _dueDate,
+      isDone: _existing?.isDone ?? false,
+    );
+
+    final ok = await provider.addOrUpdateTask(userId, task);
+    if (ok) {
+      navigator.pop();
+    } else {
+      messenger.showSnackBar(
+        SnackBar(content: Text(provider.errorMessage ?? 'Failed to save task')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<TaskProvider>();
+    final isLoading = context.select<TaskProvider, bool>((p) => p.isLoading);
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Add / Edit Task')),
-      body: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: provider.isLoading ? 0.5 : 1.0,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              children: [
-                TextFormField(
-                  initialValue: _title,
-                  decoration: const InputDecoration(labelText: 'Title'),
-                  onSaved: (v) => _title = v ?? '',
-                  validator: (v) =>
-                      v == null || v.isEmpty ? 'Please enter a title' : null,
+      appBar: AppBar(
+        title: Text(_existing == null ? 'New task' : 'Edit task'),
+      ),
+      body: SafeArea(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              TextFormField(
+                controller: _title,
+                autofocus: _existing == null,
+                textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(labelText: 'Title'),
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please enter a title'
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _description,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Description (optional)',
+                  alignLabelWithHint: true,
                 ),
-                TextFormField(
-                  initialValue: _description,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  onSaved: (v) => _description = v ?? '',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: () async {
-                    final date = await showDatePicker(
-                      context: context,
-                      initialDate: _dueDate ?? DateTime.now(),
-                      firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (date != null) {
-                      setState(() => _dueDate = date);
-                    }
-                  },
-                  label: Text(
-                    _dueDate != null
-                        ? 'Due Date: ${_dueDate!.toLocal().toString().split(' ')[0]}'
-                        : 'Set Due Date',
+                minLines: 3,
+                maxLines: 5,
+              ),
+              const SizedBox(height: 16),
+              InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: _pickDate,
+                child: InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'Due date (optional)',
+                    prefixIcon: const Icon(Icons.event),
+                    suffixIcon: _dueDate == null
+                        ? null
+                        : IconButton(
+                            tooltip: 'Clear due date',
+                            icon: const Icon(Icons.close),
+                            onPressed: () => setState(() => _dueDate = null),
+                          ),
+                  ),
+                  child: Text(
+                    _dueDate == null ? 'No due date' : formatDate(_dueDate!),
+                    style: TextStyle(
+                      color: _dueDate == null ? scheme.onSurfaceVariant : null,
+                    ),
                   ),
                 ),
-                if (_dueDate != null)
-                  TextButton(
-                    onPressed: () => setState(() => _dueDate = null),
-                    child: const Text('Clear Due Date'),
-                  ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: provider.isLoading ? null : _save,
-                  child: const Text('Save'),
+              ),
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: isLoading ? null : _save,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
                 ),
-              ],
-            ),
+                child: isLoading
+                    ? const SizedBox(
+                        height: 22,
+                        width: 22,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      )
+                    : const Text('Save'),
+              ),
+            ],
           ),
         ),
       ),
