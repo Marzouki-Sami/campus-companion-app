@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 
-import 'providers/auth_provider.dart';
-import 'providers/task_provider.dart';
-import 'providers/announcement_provider.dart';
-import 'providers/category_provider.dart';
-import 'providers/users_provider.dart';
-import 'routes/app_routes.dart';
-import 'screens/splash_screen.dart';
-import 'firebase_options.dart';
+import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
+import 'package:campus_companion/features/tasks/presentation/providers/task_provider.dart';
+import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
+import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
+import 'package:campus_companion/features/admin/presentation/providers/users_provider.dart';
+import 'package:campus_companion/core/routing/app_router.dart';
+import 'package:campus_companion/features/auth/presentation/screens/splash_screen.dart';
+import 'package:campus_companion/firebase_options.dart';
 
 /// Entry point of the Campus Companion app.
 ///
