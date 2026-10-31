@@ -17,7 +17,12 @@ class FirebaseAuthRepository implements AuthRepository {
   Stream<AppUser?> authStateChanges() {
     return _auth.authStateChanges().asyncMap((user) async {
       if (user == null) return null;
-      return _users.fetchOrCreate(user.uid, user.email ?? '');
+      try {
+        return await _users.fetchOrCreate(user.uid, user.email ?? '');
+      } catch (_) {
+        // A profile that cannot be loaded must not crash the auth stream.
+        return null;
+      }
     });
   }
 
