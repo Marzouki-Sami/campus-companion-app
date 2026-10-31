@@ -13,9 +13,21 @@ import 'package:campus_companion/features/categories/data/firestore_category_rep
 import 'package:campus_companion/features/tasks/data/firestore_task_repository.dart';
 import 'package:campus_companion/firebase_options.dart';
 
+/// Run with `--dart-define=USE_FIREBASE_EMULATOR=true` to use the local
+/// Firebase Emulator Suite instead of a real project. On a physical device,
+/// also pass `--dart-define=EMULATOR_HOST=<your computer's LAN IP>`.
+const _useEmulator = bool.fromEnvironment('USE_FIREBASE_EMULATOR');
+const _emulatorHost =
+    String.fromEnvironment('EMULATOR_HOST', defaultValue: 'localhost');
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  if (_useEmulator) {
+    FirebaseAuth.instance.useAuthEmulator(_emulatorHost, 9099);
+    FirebaseFirestore.instance.useFirestoreEmulator(_emulatorHost, 8080);
+  }
 
   final firestore = FirebaseFirestore.instance;
   final userRepository = FirestoreUserRepository(firestore);
