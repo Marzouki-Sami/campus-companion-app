@@ -1,45 +1,28 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:campus_companion/core/presentation/loading_state_mixin.dart';
 import 'package:campus_companion/features/auth/domain/app_user.dart';
-import 'package:campus_companion/core/services/firestore_service.dart';
+import 'package:campus_companion/features/auth/domain/auth_repository.dart';
 
-class UsersProvider extends ChangeNotifier {
-  final FirestoreService _firestoreService = FirestoreService();
+/// Admin-facing list of all users.
+class UsersProvider extends ChangeNotifier with LoadingStateMixin {
+  UsersProvider(this._repository);
 
-  List<AppUser> _users = [];
-  bool _isLoading = false;
-  String? _errorMessage;
+  final UserRepository _repository;
 
+  List<AppUser> _users = const [];
   List<AppUser> get users => _users;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
 
-  Future<void> loadUsers() async {
-    _setLoading(true);
-    try {
-      _users = await _firestoreService.fetchAllUsers();
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = 'Failed to load users';
-    } finally {
-      _setLoading(false);
-    }
+  Future<bool> loadUsers() {
+    return runGuarded(() async {
+      _users = await _repository.fetchAll();
+    }, failureMessage: 'Failed to load users');
   }
 
-  Future<void> updateUser(AppUser user) async {
-    _setLoading(true);
-    try {
-      await _firestoreService.saveUserProfile(user);
-      await loadUsers();
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = 'Failed to update user';
-      _setLoading(false);
-    }
-  }
-
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+  Future<bool> updateUser(AppUser user) {
+    return runGuarded(() async {
+      await _repository.save(user);
+      _users = await _repository.fetchAll();
+    }, failureMessage: 'Failed to update user');
   }
 }

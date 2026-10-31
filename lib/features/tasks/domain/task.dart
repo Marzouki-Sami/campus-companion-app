@@ -1,13 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Task {
-  final String id;
-  final String title;
-  final String? description;
-  final DateTime? dueDate;
-  final bool isDone;
-
-  Task({
+  const Task({
     required this.id,
     required this.title,
     this.description,
@@ -15,36 +7,16 @@ class Task {
     this.isDone = false,
   });
 
-  bool get isOverdue => dueDate != null && dueDate!.isBefore(DateTime.now()) && !isDone;
+  final String id;
+  final String title;
+  final String? description;
+  final DateTime? dueDate;
+  final bool isDone;
 
-  factory Task.fromMap(String id, Map<String, dynamic> data) {
-    final dynamic raw = data['dueDate'];
-    DateTime? dueDate;
-    if (raw is Timestamp) {
-      dueDate = raw.toDate();
-    } else if (raw is DateTime) {
-      dueDate = raw;
-    } else if (raw is String) {
-      dueDate = DateTime.tryParse(raw);
-    }
+  bool isOverdueAt(DateTime now) =>
+      dueDate != null && dueDate!.isBefore(now) && !isDone;
 
-    return Task(
-      id: id,
-      title: data['title'] as String? ?? '',
-      description: data['description'] as String?,
-      dueDate: dueDate,
-      isDone: data['isDone'] as bool? ?? false,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'description': description,
-      'dueDate': dueDate != null ? Timestamp.fromDate(dueDate!) : null,
-      'isDone': isDone,
-    };
-  }
+  bool get isOverdue => isOverdueAt(DateTime.now());
 
   Task copyWith({
     String? id,
@@ -62,5 +34,3 @@ class Task {
     );
   }
 }
-
-

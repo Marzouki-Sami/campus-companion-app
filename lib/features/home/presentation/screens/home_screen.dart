@@ -53,11 +53,14 @@ class _HomeScreenState extends State<HomeScreen> {
       _wrapWithNavigator(const TasksListScreen()),
     ];
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
         final nav = Navigator.of(context);
         if (nav.canPop()) {
-          return true; // normal back navigation
+          nav.pop();
+          return;
         }
         final shouldExit = await showDialog<bool>(
           context: context,
@@ -79,9 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         if (shouldExit == true) {
           SystemNavigator.pop();
-          return false;
         }
-        return false;
       },
       child: Scaffold(
         appBar: AppBar(title: const Text('Campus Companion')),
@@ -257,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     );
-                  }).toList(),
+                  }),
               ],
             ),
           ),
@@ -298,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       title: Text(t.title),
                       subtitle: Text(t.description != null ? t.description! : (t.dueDate != null ? 'Due: ${t.dueDate!.toLocal().toString().split(' ')[0]}' : 'No due date')),
                     );
-                  }).toList(),
+                  }),
               ],
             ),
           ),
@@ -324,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text('Category:', style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
-                  value: tempCategoryId,
+                  initialValue: tempCategoryId,
                   decoration: const InputDecoration(labelText: 'Select Category'),
                   items: [
                     const DropdownMenuItem<String>(
@@ -405,7 +406,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Drawer _buildDrawer(BuildContext context) {
     final auth = context.read<AuthProvider>();
-    final role = auth.currentUser?.role ?? 'student';
+    final isAdmin = auth.currentUser?.role.isAdmin ?? false;
     return Drawer(
       child: ListView(
         children: [
@@ -445,7 +446,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushNamed(context, ProfileScreen.routeName);
             },
           ),
-          if (role == 'admin')
+          if (isAdmin)
             ListTile(
               leading: const Icon(Icons.dashboard),
               title: const Text('Admin Dashboard'),
@@ -459,14 +460,12 @@ class _HomeScreenState extends State<HomeScreen> {
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
             onTap: () async {
+              final navigator = Navigator.of(context);
               await auth.logout();
-              if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  LoginScreen.routeName,
-                  (_) => false,
-                );
-              }
+              navigator.pushNamedAndRemoveUntil(
+                LoginScreen.routeName,
+                (_) => false,
+              );
             },
           ),
         ],
@@ -475,15 +474,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _wrapWithNavigator(Widget child) {
-    return WillPopScope(
-      onWillPop: () async {
-        final nav = Navigator.of(context);
-        if (nav.canPop()) {
-          nav.pop();
-          return false;
-        }
-        return false;
-      },
+    return PopScope(
+      canPop: false,
       child: child,
     );
   }

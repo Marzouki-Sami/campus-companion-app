@@ -1,61 +1,34 @@
 import 'package:flutter/foundation.dart';
 
+import 'package:campus_companion/core/presentation/loading_state_mixin.dart';
 import 'package:campus_companion/features/categories/domain/announcement_category.dart';
-import 'package:campus_companion/core/services/firestore_service.dart';
+import 'package:campus_companion/features/categories/domain/category_repository.dart';
 
-/// Manages categories (admin only).
-class CategoryProvider extends ChangeNotifier {
-  final FirestoreService _firestoreService = FirestoreService();
+class CategoryProvider extends ChangeNotifier with LoadingStateMixin {
+  CategoryProvider(this._repository);
 
-  List<AnnouncementCategory> _categories = [];
-  bool _isLoading = false;
-  String? _errorMessage;
+  final CategoryRepository _repository;
 
+  List<AnnouncementCategory> _categories = const [];
   List<AnnouncementCategory> get categories => _categories;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
 
-  Future<void> loadCategories() async {
-    _setLoading(true);
-    try {
-      _categories = await _firestoreService.fetchCategories();
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = 'Failed to load categories';
-    } finally {
-      _setLoading(false);
-    }
+  Future<bool> loadCategories() {
+    return runGuarded(() async {
+      _categories = await _repository.fetchAll();
+    }, failureMessage: 'Failed to load categories');
   }
 
-  Future<void> addOrUpdateCategory(AnnouncementCategory category) async {
-    _setLoading(true);
-    try {
-      await _firestoreService.saveCategory(category);
-      await loadCategories(); // Reload to get updated list
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = 'Failed to save category';
-    } finally {
-      _setLoading(false);
-    }
+  Future<bool> addOrUpdateCategory(AnnouncementCategory category) {
+    return runGuarded(() async {
+      await _repository.save(category);
+      _categories = await _repository.fetchAll();
+    }, failureMessage: 'Failed to save category');
   }
 
-  Future<void> deleteCategory(String categoryId) async {
-    _setLoading(true);
-    try {
-      await _firestoreService.deleteCategory(categoryId);
-      await loadCategories(); // Reload to get updated list
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = 'Failed to delete category';
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
+  Future<bool> deleteCategory(String categoryId) {
+    return runGuarded(() async {
+      await _repository.delete(categoryId);
+      _categories = await _repository.fetchAll();
+    }, failureMessage: 'Failed to delete category');
   }
 }
-

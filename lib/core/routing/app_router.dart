@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import 'package:campus_companion/features/auth/presentation/screens/splash_screen.dart';
 import 'package:campus_companion/features/auth/presentation/screens/login_screen.dart';
@@ -12,8 +12,8 @@ import 'package:campus_companion/features/tasks/presentation/screens/tasks_list_
 import 'package:campus_companion/features/tasks/presentation/screens/task_edit_screen.dart';
 import 'package:campus_companion/features/profile/presentation/screens/profile_screen.dart';
 
-/// Central place for all named routes used in the app.
-class AppRoutes {
+/// Maps route names to screens.
+class AppRouter {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case SplashScreen.routeName:
