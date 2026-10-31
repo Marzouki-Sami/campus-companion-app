@@ -6,6 +6,7 @@ import 'package:campus_companion/app.dart';
 import 'package:campus_companion/core/config/app_config.dart';
 import 'package:campus_companion/core/presentation/config_error_screen.dart';
 import 'package:campus_companion/features/announcements/data/supabase_announcement_repository.dart';
+import 'package:campus_companion/features/auth/data/hibp_breach_checker.dart';
 import 'package:campus_companion/features/auth/data/supabase_auth_repository.dart';
 import 'package:campus_companion/features/auth/data/supabase_user_repository.dart';
 import 'package:campus_companion/features/categories/data/supabase_category_repository.dart';
@@ -38,6 +39,7 @@ Future<void> main() async {
         settingsRepository: SharedPreferencesSettingsRepository(
           await SharedPreferences.getInstance(),
         ),
+        passwordBreachChecker: HibpBreachChecker(),
       ),
     ),
   );

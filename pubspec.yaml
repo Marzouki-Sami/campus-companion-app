@@ -19,6 +19,8 @@ dependencies:
   # Backend (Supabase) and local storage
   supabase_flutter: ^2.18.3
   shared_preferences: ^2.5.6
+  http: ^1.6.0
+  crypto: ^3.0.8
 
 dev_dependencies:
   flutter_test:

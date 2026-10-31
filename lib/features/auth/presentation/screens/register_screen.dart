@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/widgets/auth_scaffold.dart';
+import 'package:campus_companion/features/auth/domain/password_policy.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/auth/presentation/screens/login_screen.dart';
+import 'package:campus_companion/features/auth/presentation/screens/verify_email_screen.dart';
+import 'package:campus_companion/features/auth/presentation/widgets/password_requirements.dart';
 import 'package:campus_companion/features/home/presentation/screens/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -17,23 +20,45 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _email = '';
-  String _password = '';
-  String _name = '';
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _confirm = TextEditingController();
   bool _obscure = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _password.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _password.dispose();
+    _confirm.dispose();
+    super.dispose();
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    _formKey.currentState!.save();
     final auth = context.read<AuthProvider>();
-    final ok = await auth.register(_email.trim(), _password, _name.trim());
+    final email = _email.text.trim();
+    final ok = await auth.register(email, _password.text, _name.text.trim());
     if (!mounted) return;
-    if (ok) {
-      Navigator.pushReplacementNamed(context, HomeScreen.routeName);
-    } else {
+    if (!ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.errorMessage ?? 'Registration failed')),
       );
+    } else if (auth.pendingVerificationEmail != null) {
+      Navigator.pushReplacementNamed(
+        context,
+        VerifyEmailScreen.routeName,
+        arguments: VerifyEmailArgs(email),
+      );
+    } else {
+      Navigator.pushReplacementNamed(context, HomeScreen.routeName);
     }
   }
 
@@ -51,6 +76,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             children: [
               TextFormField(
+                controller: _name,
                 decoration: const InputDecoration(
                   labelText: 'Name',
                   prefixIcon: Icon(Icons.person_outline),
@@ -58,10 +84,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 textCapitalization: TextCapitalization.words,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.name],
-                onSaved: (v) => _name = v ?? '',
               ),
               const SizedBox(height: 16),
               TextFormField(
+                controller: _email,
                 decoration: const InputDecoration(
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.mail_outline),
@@ -69,7 +95,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.email],
-                onSaved: (v) => _email = v ?? '',
                 validator: (v) {
                   final value = v?.trim() ?? '';
                   if (value.isEmpty) return 'Please enter email';
@@ -81,6 +106,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 16),
               TextFormField(
+                controller: _password,
                 decoration: InputDecoration(
                   labelText: 'Password',
                   prefixIcon: const Icon(Icons.lock_outline),
@@ -93,15 +119,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 obscureText: _obscure,
-                textInputAction: TextInputAction.done,
+                textInputAction: TextInputAction.next,
                 autofillHints: const [AutofillHints.newPassword],
+                validator: PasswordPolicy.validate,
+              ),
+              const SizedBox(height: 12),
+              PasswordRequirements(password: _password.text),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _confirm,
+                decoration: const InputDecoration(
+                  labelText: 'Confirm password',
+                  prefixIcon: Icon(Icons.lock_outline),
+                ),
+                obscureText: _obscure,
+                textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _submit(),
-                onSaved: (v) => _password = v ?? '',
-                validator: (v) {
-                  if (v == null || v.isEmpty) return 'Please enter password';
-                  if (v.length < 6) return 'Use at least 6 characters';
-                  return null;
-                },
+                validator: (v) =>
+                    v == _password.text ? null : 'Passwords do not match',
               ),
             ],
           ),
