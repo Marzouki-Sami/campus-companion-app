@@ -22,7 +22,7 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
   String? _selectedCategoryId;
   DateTime? _selectedDateFilter;
   String _searchQuery = '';
-  bool _searchStartsWith = true;
+  final bool _searchStartsWith = true;
 
   @override
   void initState() {
@@ -65,8 +65,8 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
     final provider = context.watch<AnnouncementProvider>();
     final auth = context.watch<AuthProvider>();
     final categoryProvider = context.watch<CategoryProvider>();
-    final role = auth.currentUser?.role ?? 'student';
-    final bool canEditAnnouncements = role == 'professor' || role == 'admin';
+    final bool canEditAnnouncements =
+        auth.currentUser?.role.canManageAnnouncements ?? false;
 
     final filteredAnnouncements = _getFilteredAnnouncements(provider.announcements);
 
@@ -255,7 +255,7 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
               const Text('Category:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: _selectedCategoryId,
+                initialValue: _selectedCategoryId,
                 decoration: const InputDecoration(labelText: 'Select Category'),
                 items: [
                   const DropdownMenuItem<String>(

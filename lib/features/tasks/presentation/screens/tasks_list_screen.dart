@@ -205,7 +205,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
             children: [
               const Text('Status:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              DropdownButtonFormField<bool?>( value: _filterByDone,
+              DropdownButtonFormField<bool?>( initialValue: _filterByDone,
                 decoration: const InputDecoration(labelText: 'Filter by Status'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('All Tasks')),
@@ -219,7 +219,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
               const SizedBox(height: 16),
               const Text('Due Date:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              DropdownButtonFormField<bool?>( value: _filterByOverdue,
+              DropdownButtonFormField<bool?>( initialValue: _filterByOverdue,
                 decoration: const InputDecoration(labelText: 'Filter by Due Date'),
                 items: const [
                   DropdownMenuItem<bool?>(value: null, child: Text('All Tasks')),
@@ -234,7 +234,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
               const Text('Search Type:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               DropdownButtonFormField<bool>(
-                value: _searchStartsWith,
+                initialValue: _searchStartsWith,
                 decoration: const InputDecoration(labelText: 'Search Mode'),
                 items: const [
                   DropdownMenuItem<bool>(value: true, child: Text('Starts with')),

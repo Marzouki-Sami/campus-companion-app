@@ -1,4 +1,4 @@
-name: campus_companion
+﻿name: campus_companion
 description: A simple university-oriented Flutter app to manage announcements, events, courses, and personal tasks.
 publish_to: "none"
 
@@ -20,12 +20,6 @@ dependencies:
   firebase_core: ^3.9.0
   firebase_auth: ^5.3.1
   cloud_firestore: ^5.5.1
-
-  # HTTP client
-  http: ^1.2.2
-
-  # Optional: Lottie animations for splash / empty states
-  lottie: ^3.1.2
 
 dev_dependencies:
   flutter_test:
