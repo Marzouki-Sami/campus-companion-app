@@ -13,9 +13,17 @@ class AnnouncementProvider extends ChangeNotifier with LoadingStateMixin {
   List<Announcement> _announcements = const [];
   List<Announcement> get announcements => _announcements;
 
+  Set<String> _readIds = const {};
+
+  bool isUnread(String id) => !_readIds.contains(id);
+
+  int get unreadCount =>
+      _announcements.where((a) => !_readIds.contains(a.id)).length;
+
   Future<bool> loadAnnouncements() {
     return runGuarded(() async {
       _announcements = await _repository.fetchAll();
+      _readIds = await _repository.fetchReadIds();
     }, failureMessage: 'Failed to load announcements');
   }
 
@@ -34,5 +42,22 @@ class AnnouncementProvider extends ChangeNotifier with LoadingStateMixin {
       await _repository.delete(announcementId);
       _announcements = await _repository.fetchAll();
     }, failureMessage: 'Failed to delete announcement');
+  }
+
+  /// Marks one announcement as read. Shown instantly; a failed save only means
+  /// it will look unread again next time, so errors are not surfaced.
+  Future<void> markRead(String id) => _markRead([id]);
+
+  Future<void> markAllRead() =>
+      _markRead([for (final a in _announcements) a.id]);
+
+  Future<void> _markRead(List<String> ids) async {
+    final fresh = ids.where((id) => !_readIds.contains(id)).toList();
+    if (fresh.isEmpty) return;
+    _readIds = {..._readIds, ...fresh};
+    notifyListeners();
+    try {
+      await _repository.markRead(fresh);
+    } catch (_) {}
   }
 }

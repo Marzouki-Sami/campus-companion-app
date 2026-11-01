@@ -90,6 +90,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final unread =
+        context.select<AnnouncementProvider, int>((p) => p.unreadCount);
+
     return PopScope(
       canPop: _index == _homeTab,
       onPopInvokedWithResult: (didPop, _) {
@@ -111,15 +114,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         bottomNavigationBar: NavigationBar(
           selectedIndex: _index,
           onDestinationSelected: _select,
-          destinations: const [
+          destinations: [
             NavigationDestination(
               icon: Icon(Icons.home_outlined),
               selectedIcon: Icon(Icons.home),
               label: 'Home',
             ),
             NavigationDestination(
-              icon: Icon(Icons.campaign_outlined),
-              selectedIcon: Icon(Icons.campaign),
+              icon: _UnreadBadge(
+                count: unread,
+                child: const Icon(Icons.campaign_outlined),
+              ),
+              selectedIcon: _UnreadBadge(
+                count: unread,
+                child: const Icon(Icons.campaign),
+              ),
               label: 'News',
             ),
             NavigationDestination(
@@ -135,6 +144,23 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// A small count on the News tab icon; hidden when everything is read.
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count, required this.child});
+
+  final int count;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Badge(
+      isLabelVisible: count > 0,
+      label: Text(count > 99 ? '99+' : '$count'),
+      child: child,
     );
   }
 }

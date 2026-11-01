@@ -11,7 +11,7 @@ import 'package:campus_companion/features/announcements/domain/announcement_repo
 const imagesBucket = 'announcement-images';
 
 const _columns =
-    'id, title, body, created_at, event_start, event_end, location, '
+    'id, title, body, created_at, event_start, event_end, location, is_pinned, '
     'announcement_categories(category_id), announcement_images(path, position)';
 
 Announcement announcementFromRow(
@@ -36,6 +36,7 @@ Announcement announcementFromRow(
     eventStart: _parseDate(row['event_start']),
     eventEnd: _parseDate(row['event_end']),
     location: row['location'] as String?,
+    isPinned: row['is_pinned'] == true,
     images: [
       for (final image in imageRows)
         AnnouncementImage(
@@ -63,6 +64,7 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
       final rows = await _client
           .from('announcements')
           .select(_columns)
+          .order('is_pinned', ascending: false)
           .order('created_at', ascending: false);
       return [
         for (final row in rows)
@@ -87,6 +89,7 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
           'p_event_start': announcement.eventStart?.toUtc().toIso8601String(),
           'p_event_end': announcement.eventEnd?.toUtc().toIso8601String(),
           'p_location': announcement.location,
+          'p_pinned': announcement.isPinned,
         },
       );
       await _syncImages(id, announcement.images, newImages);
@@ -158,6 +161,27 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
         throw const AppException('You do not have permission to do that.');
       }
       await _removeFiles([for (final row in stored) row['path'] as String]);
+    });
+  }
+
+  @override
+  Future<Set<String>> fetchReadIds() {
+    return guardDb(() async {
+      final rows =
+          await _client.from('announcement_reads').select('announcement_id');
+      return {for (final row in rows) row['announcement_id'] as String};
+    });
+  }
+
+  @override
+  Future<void> markRead(Iterable<String> ids) {
+    return guardDb(() async {
+      final rows = [
+        for (final id in ids) {'announcement_id': id}
+      ];
+      if (rows.isEmpty) return;
+      await _client.from('announcement_reads').upsert(rows,
+          onConflict: 'user_id,announcement_id', ignoreDuplicates: true);
     });
   }
 

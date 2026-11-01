@@ -12,12 +12,14 @@ class AnnouncementCard extends StatelessWidget {
     required this.announcement,
     required this.categories,
     required this.onTap,
+    this.isUnread = false,
     this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
   });
 
   final Announcement announcement;
   final List<AnnouncementCategory> categories;
   final VoidCallback onTap;
+  final bool isUnread;
   final EdgeInsetsGeometry margin;
 
   @override
@@ -91,14 +93,43 @@ class AnnouncementCard extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (isUnread)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 7, right: 8),
+                          child: Semantics(
+                            label: 'Unread',
+                            child: Container(
+                              width: 10,
+                              height: 10,
+                              decoration: BoxDecoration(
+                                color: scheme.primary,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                        ),
                       Expanded(
                         child: Text(
                           announcement.title,
-                          style: theme.textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight:
+                                isUnread ? FontWeight.w700 : FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
+                      if (announcement.isPinned) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Icon(
+                            Icons.push_pin,
+                            size: 16,
+                            semanticLabel: 'Pinned',
+                            color: scheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                      ],
                       Text(
                         formatRelativeDate(announcement.createdAt),
                         style: theme.textTheme.bodySmall

@@ -152,6 +152,7 @@ class DashboardTab extends StatelessWidget {
               for (final a in latest)
                 AnnouncementCard(
                   announcement: a,
+                  isUnread: announcements.isUnread(a.id),
                   categories: categories,
                   margin: const EdgeInsets.symmetric(vertical: 4),
                   onTap: () => Navigator.pushNamed(
