@@ -1,6 +1,6 @@
 begin;
 
-select plan(47);
+select plan(49);
 
 -- Fixtures (run as the superuser, so auth.uid() is null and triggers trust us)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -85,6 +85,17 @@ select lives_ok(
   'a student can create a task'
 );
 select is((select count(*)::int from public.tasks), 1, 'a student sees only their own tasks');
+select lives_ok(
+  $$insert into public.tasks (title, due_date, remind_days_before)
+    values ('Reminded', now() + interval '3 days', 1)$$,
+  'a student can set a reminder on a task'
+);
+select throws_ok(
+  $$insert into public.tasks (title, remind_days_before) values ('Too early', 30)$$,
+  '23514',
+  null,
+  'a reminder cannot be more than two weeks ahead'
+);
 select throws_ok(
   $$insert into public.tasks (user_id, title) values ('00000000-0000-0000-0000-000000000002', 'Planted')$$,
   '42501',
