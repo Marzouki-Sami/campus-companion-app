@@ -15,6 +15,7 @@ import 'package:campus_companion/features/categories/domain/category_repository.
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 import 'package:campus_companion/features/settings/domain/settings_repository.dart';
 import 'package:campus_companion/features/settings/presentation/providers/theme_provider.dart';
+import 'package:campus_companion/features/tasks/domain/reminder_service.dart';
 import 'package:campus_companion/features/tasks/domain/task_repository.dart';
 import 'package:campus_companion/features/tasks/presentation/providers/task_provider.dart';
 
@@ -28,6 +29,7 @@ class AppDependencies {
     required this.categoryRepository,
     required this.settingsRepository,
     this.passwordBreachChecker = const NoPasswordBreachCheck(),
+    this.reminderService = const NoReminders(),
   });
 
   final AuthRepository authRepository;
@@ -37,6 +39,7 @@ class AppDependencies {
   final CategoryRepository categoryRepository;
   final SettingsRepository settingsRepository;
   final PasswordBreachChecker passwordBreachChecker;
+  final ReminderService reminderService;
 }
 
 class CampusCompanionApp extends StatelessWidget {
@@ -55,7 +58,10 @@ class CampusCompanionApp extends StatelessWidget {
           ),
         ),
         ChangeNotifierProvider(
-          create: (_) => TaskProvider(dependencies.taskRepository),
+          create: (_) => TaskProvider(
+            dependencies.taskRepository,
+            reminders: dependencies.reminderService,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) =>
