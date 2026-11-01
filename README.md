@@ -20,7 +20,8 @@
 | Area | Highlights |
 | --- | --- |
 | **Dashboard** | Personal greeting, open/overdue task counters, next tasks and the latest announcements at a glance |
-| **Announcements** | Category chips, full-text search, time-range filter; professors and admins can publish, edit and delete, and attach up to 8 photos shown as a swipeable carousel with a full-screen, pinch-to-zoom viewer |
+| **Announcements** | Category chips, full-text search, time-range filter; professors and admins can publish, edit and delete, attach up to 8 photos (swipeable carousel, full-screen pinch-to-zoom viewer) and mark an announcement as an **event** with a date, time and place |
+| **Events** | Event announcements show their date and place on the card, have an *Add to calendar* button, and the dashboard lists the next ones under *Upcoming events* |
 | **Tasks** | Due dates with relative wording ("Due tomorrow", "3 days overdue"), status and overdue filters, search, pull-to-refresh |
 | **Administration** | Tabbed dashboard to manage users (role, suspension, name, account deletion) and announcement categories |
 | **Accounts** | Email/password sign-up with **email verification** (6-digit code), a strong-password policy with a live checklist, **forgot-password** by emailed code, profile editing |
@@ -56,11 +57,12 @@ Access control is enforced **in the database** with Postgres Row Level Security,
   </tr>
 </table>
 
-### Announcement photos
+### Announcement photos and events
 
 <table>
   <tr>
     <td><img src="docs/screenshots/13-announcement-photos.png" alt="Announcement with a swipeable photo carousel" width="220" /></td>
+    <td><img src="docs/screenshots/14-event-detail.png" alt="Event with date, place and Add to calendar" width="220" /></td>
   </tr>
 </table>
 
