@@ -18,3 +18,8 @@ updates:
     directory: /android
     schedule:
       interval: monthly
+    # The Android Gradle Plugin, Kotlin and Gradle versions are tied to the Flutter
+    # SDK's templates; major jumps break the build and are done by hand.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
