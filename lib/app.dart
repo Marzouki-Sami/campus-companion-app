@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/routing/app_router.dart';
+import 'package:campus_companion/core/routing/root_navigator.dart';
 import 'package:campus_companion/core/theme/app_theme.dart';
 import 'package:campus_companion/features/admin/presentation/providers/users_provider.dart';
 import 'package:campus_companion/features/announcements/domain/announcement_repository.dart';
@@ -78,6 +79,7 @@ class CampusCompanionApp extends StatelessWidget {
           darkTheme: AppTheme.dark,
           themeMode: theme.mode,
           home: const SplashScreen(),
+          navigatorKey: rootNavigatorKey,
           onGenerateRoute: AppRouter.onGenerateRoute,
         ),
       ),

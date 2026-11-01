@@ -9,6 +9,8 @@ import 'package:campus_companion/features/announcements/data/supabase_announceme
 import 'package:campus_companion/features/auth/data/hibp_breach_checker.dart';
 import 'package:campus_companion/features/auth/data/supabase_auth_repository.dart';
 import 'package:campus_companion/features/auth/data/supabase_user_repository.dart';
+import 'package:campus_companion/features/auth/data/turnstile_captcha_solver.dart';
+import 'package:campus_companion/features/auth/domain/captcha_solver.dart';
 import 'package:campus_companion/features/categories/data/supabase_category_repository.dart';
 import 'package:campus_companion/features/settings/data/shared_preferences_settings_repository.dart';
 import 'package:campus_companion/features/tasks/data/supabase_task_repository.dart';
@@ -27,11 +29,18 @@ Future<void> main() async {
   );
   final client = Supabase.instance.client;
   final userRepository = SupabaseUserRepository(client);
+  final CaptchaSolver captcha = AppConfig.turnstileSiteKey.isEmpty
+      ? const NoCaptcha()
+      : TurnstileCaptchaSolver(AppConfig.turnstileSiteKey);
 
   runApp(
     CampusCompanionApp(
       dependencies: AppDependencies(
-        authRepository: SupabaseAuthRepository(client, userRepository),
+        authRepository: SupabaseAuthRepository(
+          client,
+          userRepository,
+          captcha: captcha,
+        ),
         userRepository: userRepository,
         taskRepository: SupabaseTaskRepository(client),
         announcementRepository: SupabaseAnnouncementRepository(client),

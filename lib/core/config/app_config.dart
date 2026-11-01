@@ -6,6 +6,10 @@ abstract final class AppConfig {
   static const supabasePublishableKey =
       String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
 
+  /// Optional. When set, sign-in and sign-up show a Cloudflare Turnstile
+  /// challenge. The Supabase project must have captcha protection enabled.
+  static const turnstileSiteKey = String.fromEnvironment('TURNSTILE_SITE_KEY');
+
   static bool get isConfigured =>
       supabaseUrl.isNotEmpty && supabasePublishableKey.isNotEmpty;
 }

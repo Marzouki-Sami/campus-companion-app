@@ -5,14 +5,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:campus_companion/core/errors/app_exception.dart';
 import 'package:campus_companion/features/auth/domain/app_user.dart';
 import 'package:campus_companion/features/auth/domain/auth_repository.dart';
+import 'package:campus_companion/features/auth/domain/captcha_solver.dart';
 
 const _offlineMessage = 'No connection. Check your internet and try again.';
 
 class SupabaseAuthRepository implements AuthRepository {
-  SupabaseAuthRepository(this._client, this._users);
+  SupabaseAuthRepository(
+    this._client,
+    this._users, {
+    CaptchaSolver captcha = const NoCaptcha(),
+  }) : _captcha = captcha;
 
   final SupabaseClient _client;
   final UserRepository _users;
+  final CaptchaSolver _captcha;
 
   GoTrueClient get _auth => _client.auth;
 
@@ -54,8 +60,13 @@ class SupabaseAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
+    final captchaToken = await _captcha.solve();
     final response = await _guard(
-      () => _auth.signInWithPassword(email: email, password: password),
+      () => _auth.signInWithPassword(
+        email: email,
+        password: password,
+        captchaToken: captchaToken,
+      ),
       fallback: 'Login failed',
       email: email,
     );
@@ -71,11 +82,13 @@ class SupabaseAuthRepository implements AuthRepository {
     required String password,
     required String displayName,
   }) async {
+    final captchaToken = await _captcha.solve();
     final response = await _guard(
       () => _auth.signUp(
         email: email,
         password: password,
         data: {'display_name': displayName},
+        captchaToken: captchaToken,
       ),
       fallback: 'Registration failed',
     );
@@ -99,17 +112,23 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> resendVerification(String email) {
+  Future<void> resendVerification(String email) async {
+    final captchaToken = await _captcha.solve();
     return _guard(
-      () => _auth.resend(type: OtpType.signup, email: email),
+      () => _auth.resend(
+        type: OtpType.signup,
+        email: email,
+        captchaToken: captchaToken,
+      ),
       fallback: 'Could not send a new code',
     );
   }
 
   @override
-  Future<void> requestPasswordReset(String email) {
+  Future<void> requestPasswordReset(String email) async {
+    final captchaToken = await _captcha.solve();
     return _guard(
-      () => _auth.resetPasswordForEmail(email),
+      () => _auth.resetPasswordForEmail(email, captchaToken: captchaToken),
       fallback: 'Could not send a reset code',
     );
   }
