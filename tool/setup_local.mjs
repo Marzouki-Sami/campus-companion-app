@@ -31,16 +31,29 @@ function localStatus() {
   return env;
 }
 
-const status = localStatus();
-const url = status.API_URL;
-const publishableKey = status.PUBLISHABLE_KEY ?? status.ANON_KEY;
-const serviceKey = status.SERVICE_ROLE_KEY ?? status.SECRET_KEY;
+// With SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and SUPABASE_SERVICE_KEY set (as the
+// docker compose seed service does) the CLI is not needed.
+const fromEnv = process.env.SUPABASE_SERVICE_KEY !== undefined;
+const status = fromEnv ? {} : localStatus();
+const url = fromEnv ? process.env.SUPABASE_URL : status.API_URL;
+const publishableKey = fromEnv
+  ? process.env.SUPABASE_PUBLISHABLE_KEY
+  : (status.PUBLISHABLE_KEY ?? status.ANON_KEY);
+const serviceKey = fromEnv
+  ? process.env.SUPABASE_SERVICE_KEY
+  : (status.SERVICE_ROLE_KEY ?? status.SECRET_KEY);
 if (!url || !publishableKey || !serviceKey) {
   console.error('Could not read the local Supabase keys from `supabase status`.');
   process.exit(1);
 }
 
-if (!existsSync('env.json') || process.argv.includes('--force-env')) {
+// Demo data is for throwaway local stacks only; refuse anything served over TLS.
+if (!url.startsWith('http://')) {
+  console.error('Refusing to seed a non-local (https) Supabase project.');
+  process.exit(1);
+}
+
+if (!process.argv.includes('--no-env-file') && (!existsSync('env.json') || process.argv.includes('--force-env'))) {
   writeFileSync(
     'env.json',
     `${JSON.stringify({ SUPABASE_URL: url, SUPABASE_PUBLISHABLE_KEY: publishableKey }, null, 2)}\n`,
@@ -48,7 +61,7 @@ if (!existsSync('env.json') || process.argv.includes('--force-env')) {
   console.log('Wrote env.json');
 }
 
-const password = process.env.DEMO_PASSWORD ?? `${randomBytes(9).toString('base64url')}-1aA`;
+const password = process.env.DEMO_PASSWORD || `${randomBytes(9).toString('base64url')}-1aA`;
 const headers = {
   'Content-Type': 'application/json',
   apikey: serviceKey,

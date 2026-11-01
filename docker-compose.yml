@@ -1,0 +1,182 @@
+# The whole backend in containers, without the Supabase CLI.
+#
+#   node tool/compose_env.mjs      # once: creates .env and env.json with fresh random secrets
+#   docker compose up -d           # database, auth, API, storage, functions, mail catcher
+#   docker compose run --rm seed   # optional: demo accounts and sample data
+#   flutter run --dart-define-from-file=env.json
+#
+# Without the .env file the database refuses to start (no password set).
+#
+# Mail sent by the app (verification and reset codes) is caught by Mailpit at
+# http://127.0.0.1:8025. This setup is for local use only: it has no TLS and
+# uses throwaway secrets.
+
+name: campus-companion
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  db:
+    <<: *restart
+    image: public.ecr.aws/supabase/postgres:17.11.0.006
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./docker/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  auth:
+    <<: *restart
+    image: public.ecr.aws/supabase/gotrue:v2.197.0
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: "9999"
+      API_EXTERNAL_URL: ${PUBLIC_URL:-http://127.0.0.1:8000}/auth/v1
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: http://127.0.0.1:3000
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: "3600"
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "false"
+      GOTRUE_MAILER_OTP_LENGTH: "6"
+      GOTRUE_MAILER_OTP_EXP: "900"
+      GOTRUE_SMTP_HOST: mailpit
+      GOTRUE_SMTP_PORT: "1025"
+      GOTRUE_SMTP_ADMIN_EMAIL: admin@campus-companion.test
+      GOTRUE_SMTP_SENDER_NAME: Campus Companion
+      GOTRUE_SMTP_MAX_FREQUENCY: 60s
+      GOTRUE_MAILER_TEMPLATES_CONFIRMATION: http://gateway:8000/templates/confirmation.html
+      GOTRUE_MAILER_TEMPLATES_RECOVERY: http://gateway:8000/templates/recovery.html
+      GOTRUE_MAILER_SUBJECTS_CONFIRMATION: Your Campus Companion verification code
+      GOTRUE_MAILER_SUBJECTS_RECOVERY: Your Campus Companion password reset code
+      GOTRUE_PASSWORD_MIN_LENGTH: "8"
+      GOTRUE_PASSWORD_REQUIRED_CHARACTERS: "abcdefghijklmnopqrstuvwxyz:ABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789:!@#$$%^&*()_+-=[]{};'\\:\"|<>?,./`~"
+      GOTRUE_SECURITY_UPDATE_PASSWORD_REQUIRE_REAUTHENTICATION: "true"
+      GOTRUE_RATE_LIMIT_EMAIL_SENT: "360000"
+
+  rest:
+    <<: *restart
+    image: public.ecr.aws/supabase/postgrest:v16.5
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_DB_MAX_ROWS: "1000"
+
+  storage:
+    <<: *restart
+    image: public.ecr.aws/supabase/storage-api:v1.84.19
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      FILE_SIZE_LIMIT: "52428800"
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      GLOBAL_S3_BUCKET: stub
+      ENABLE_IMAGE_TRANSFORMATION: "false"
+    volumes:
+      - storage-data:/var/lib/storage
+
+  functions:
+    <<: *restart
+    image: public.ecr.aws/supabase/edge-runtime:v1.77.8
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SUPABASE_URL: http://gateway:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_DB_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+      JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./supabase/functions:/home/deno/functions:ro
+      - ./docker/functions/main:/home/deno/main:ro
+    command: ["start", "--main-service", "/home/deno/main", "-p", "9000"]
+
+  mailpit:
+    <<: *restart
+    image: public.ecr.aws/supabase/mailpit:v1.31.3
+    ports:
+      - "127.0.0.1:8025:8025"
+
+  gateway:
+    <<: *restart
+    image: nginx:1.27-alpine
+    depends_on:
+      - auth
+      - rest
+      - storage
+      - functions
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./docker/gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./supabase/templates:/usr/share/nginx/templates:ro
+
+  # Applies supabase/migrations once auth and storage have created their schemas.
+  migrate:
+    image: public.ecr.aws/supabase/postgres:17.11.0.006
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    entrypoint: ["/bin/sh", "/migrate.sh"]
+    volumes:
+      - ./docker/migrate.sh:/migrate.sh:ro
+      - ./supabase/migrations:/migrations:ro
+    restart: "no"
+
+  # Optional demo data: docker compose run --rm seed
+  seed:
+    profiles: ["seed"]
+    image: node:22-alpine
+    working_dir: /app
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      gateway:
+        condition: service_started
+    environment:
+      SUPABASE_URL: http://gateway:8000
+      SUPABASE_PUBLISHABLE_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+    volumes:
+      - ./tool:/app/tool:ro
+    command: ["node", "tool/setup_local.mjs", "--no-env-file"]
+
+volumes:
+  db-data:
+  storage-data:

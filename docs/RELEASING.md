@@ -22,7 +22,8 @@ Checklist for publishing the app (for example to Google Play).
 ## 4. Harden before launch
 - Turn on *Confirm email* and the password rules in Supabase Auth, and use a real SMTP sender.
 - Restrict API usage and enable the captcha if you expect public sign-ups.
-- Free Supabase projects pause after about a week of inactivity; use a paid plan or a
-  scheduled keep-alive request for anything user-facing.
+- Free Supabase projects pause after about a week of inactivity; use a paid plan, or add
+  the repository secrets SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY so the
+  [keep-alive workflow](../.github/workflows/keep-alive.yml) pings the project twice a week.
 - Run `flutter analyze`, `flutter test` and `supabase test db` and check the CI is green.
 - Publish a privacy policy; Google Play requires one.
