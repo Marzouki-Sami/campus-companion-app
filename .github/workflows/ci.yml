@@ -53,6 +53,6 @@ jobs:
       - uses: supabase/setup-cli@v3
         with:
           version: 2.122.0
-      # Only Postgres, Auth and the REST API are needed to test the policies.
-      - run: supabase start -x studio,imgproxy,vector,logflare,edge-runtime,realtime,storage-api,mailpit,postgres-meta,supavisor
+      # Postgres, Auth, the REST API and Storage (photo bucket policies) are needed.
+      - run: supabase start -x studio,imgproxy,vector,logflare,edge-runtime,realtime,mailpit,postgres-meta,supavisor
       - run: supabase test db

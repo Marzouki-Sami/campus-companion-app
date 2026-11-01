@@ -1,15 +1,28 @@
+import 'dart:math';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:campus_companion/core/errors/app_exception.dart';
 import 'package:campus_companion/core/errors/database_errors.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
+import 'package:campus_companion/features/announcements/domain/announcement_image.dart';
 import 'package:campus_companion/features/announcements/domain/announcement_repository.dart';
 
-const _columns =
-    'id, title, body, created_at, announcement_categories(category_id)';
+const imagesBucket = 'announcement-images';
 
-Announcement announcementFromRow(Map<String, dynamic> row) {
+const _columns = 'id, title, body, created_at, '
+    'announcement_categories(category_id), announcement_images(path, position)';
+
+Announcement announcementFromRow(
+  Map<String, dynamic> row, {
+  String Function(String path)? imageUrl,
+}) {
   final links = row['announcement_categories'] as List<dynamic>? ?? const [];
+  final imageRows = [
+    ...(row['announcement_images'] as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>(),
+  ]..sort((a, b) => (a['position'] as int).compareTo(b['position'] as int));
+
   return Announcement(
     id: row['id'] as String,
     title: row['title'] as String? ?? '',
@@ -19,6 +32,14 @@ Announcement announcementFromRow(Map<String, dynamic> row) {
       for (final link in links)
         (link as Map<String, dynamic>)['category_id'] as String,
     ],
+    images: [
+      for (final image in imageRows)
+        AnnouncementImage(
+          path: image['path'] as String,
+          url: imageUrl?.call(image['path'] as String) ??
+              image['path'] as String,
+        ),
+    ],
   );
 }
 
@@ -27,6 +48,8 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
 
   final SupabaseClient _client;
 
+  StorageFileApi get _storage => _client.storage.from(imagesBucket);
+
   @override
   Future<List<Announcement>> fetchAll() {
     return guardDb(() async {
@@ -34,14 +57,20 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
           .from('announcements')
           .select(_columns)
           .order('created_at', ascending: false);
-      return rows.map(announcementFromRow).toList();
+      return [
+        for (final row in rows)
+          announcementFromRow(row, imageUrl: _storage.getPublicUrl),
+      ];
     });
   }
 
   @override
-  Future<void> save(Announcement announcement) {
+  Future<void> save(
+    Announcement announcement, {
+    List<NewImage> newImages = const [],
+  }) {
     return guardDb(() async {
-      await _client.rpc<dynamic>(
+      final id = await _client.rpc<String>(
         'save_announcement',
         params: {
           'p_id': announcement.id.isEmpty ? null : announcement.id,
@@ -50,12 +79,66 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
           'p_category_ids': announcement.categories,
         },
       );
+      await _syncImages(id, announcement.images, newImages);
     });
+  }
+
+  Future<void> _syncImages(
+    String id,
+    List<AnnouncementImage> keep,
+    List<NewImage> added,
+  ) async {
+    final keptPaths = [for (final image in keep) image.path];
+    final stored = await _client
+        .from('announcement_images')
+        .select('path')
+        .eq('announcement_id', id);
+    final removed = [
+      for (final row in stored)
+        if (!keptPaths.contains(row['path'])) row['path'] as String,
+    ];
+
+    if (removed.isNotEmpty) {
+      await _client
+          .from('announcement_images')
+          .delete()
+          .inFilter('path', removed);
+      await _removeFiles(removed);
+    }
+
+    for (var i = 0; i < keptPaths.length; i++) {
+      await _client
+          .from('announcement_images')
+          .update({'position': i}).eq('path', keptPaths[i]);
+    }
+
+    for (var i = 0; i < added.length; i++) {
+      final path = '$id/${_uniqueName(added[i].name)}';
+      await _storage.uploadBinary(
+        path,
+        added[i].bytes,
+        fileOptions: FileOptions(contentType: _contentType(path)),
+      );
+      try {
+        await _client.from('announcement_images').insert({
+          'announcement_id': id,
+          'path': path,
+          'position': keptPaths.length + i,
+        });
+      } catch (_) {
+        await _removeFiles([path]);
+        rethrow;
+      }
+    }
   }
 
   @override
   Future<void> delete(String id) {
     return guardDb(() async {
+      final stored = await _client
+          .from('announcement_images')
+          .select('path')
+          .eq('announcement_id', id);
       final deleted = await _client
           .from('announcements')
           .delete()
@@ -64,6 +147,37 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
       if (deleted.isEmpty) {
         throw const AppException('You do not have permission to do that.');
       }
+      await _removeFiles([for (final row in stored) row['path'] as String]);
     });
   }
+
+  /// Photos are cosmetic: a leftover file must never fail the user's action.
+  Future<void> _removeFiles(List<String> paths) async {
+    if (paths.isEmpty) return;
+    try {
+      await _storage.remove(paths);
+    } catch (_) {}
+  }
+}
+
+final _random = Random.secure();
+
+String _uniqueName(String original) {
+  final suffix = List.generate(
+    12,
+    (_) => _random.nextInt(16).toRadixString(16),
+  ).join();
+  final dot = original.lastIndexOf('.');
+  final extension = dot < 0 ? 'jpg' : original.substring(dot + 1).toLowerCase();
+  const allowed = {'jpg', 'jpeg', 'png', 'webp'};
+  return '$suffix.${allowed.contains(extension) ? extension : 'jpg'}';
+}
+
+String _contentType(String path) {
+  final extension = path.substring(path.lastIndexOf('.') + 1);
+  return switch (extension) {
+    'png' => 'image/png',
+    'webp' => 'image/webp',
+    _ => 'image/jpeg',
+  };
 }

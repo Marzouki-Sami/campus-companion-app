@@ -5,6 +5,7 @@ import 'package:campus_companion/core/utils/date_format.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_edit_screen.dart';
+import 'package:campus_companion/features/announcements/presentation/widgets/announcement_gallery.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 
@@ -121,6 +122,10 @@ class AnnouncementDetailScreen extends StatelessWidget {
               ),
             ],
             const SizedBox(height: 24),
+            if (a.images.isNotEmpty) ...[
+              AnnouncementGallery(images: a.images),
+              const SizedBox(height: 24),
+            ],
             SelectableText(a.body, style: theme.textTheme.bodyLarge),
           ],
         ),

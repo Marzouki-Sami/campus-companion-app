@@ -1,3 +1,5 @@
+import 'package:campus_companion/features/announcements/domain/announcement_image.dart';
+
 class Announcement {
   const Announcement({
     required this.id,
@@ -5,6 +7,7 @@ class Announcement {
     required this.body,
     required this.createdAt,
     this.categories = const [],
+    this.images = const [],
   });
 
   final String id;
@@ -15,12 +18,16 @@ class Announcement {
   /// IDs of the categories this announcement belongs to.
   final List<String> categories;
 
+  /// Photos in display order; the first one is the cover.
+  final List<AnnouncementImage> images;
+
   Announcement copyWith({
     String? id,
     String? title,
     String? body,
     DateTime? createdAt,
     List<String>? categories,
+    List<AnnouncementImage>? images,
   }) {
     return Announcement(
       id: id ?? this.id,
@@ -28,6 +35,7 @@ class Announcement {
       body: body ?? this.body,
       createdAt: createdAt ?? this.createdAt,
       categories: categories ?? this.categories,
+      images: images ?? this.images,
     );
   }
 }

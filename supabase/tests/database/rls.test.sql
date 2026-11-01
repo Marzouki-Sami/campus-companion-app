@@ -1,6 +1,6 @@
 begin;
 
-select plan(25);
+select plan(35);
 
 -- Fixtures (run as the superuser, so auth.uid() is null and triggers trust us)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -122,6 +122,35 @@ select is(
   0,
   'editing replaced the category links'
 );
+select lives_ok(
+  $$insert into public.announcement_images (announcement_id, path, position)
+    select id, id::text || '/first.jpg', 0 from public.announcements where title = 'Welcome!'$$,
+  'a professor can attach a photo'
+);
+select lives_ok(
+  $$insert into public.announcement_images (announcement_id, path, position)
+    select a.id, a.id::text || '/extra-' || n || '.jpg', n
+    from public.announcements a, generate_series(1, 7) as n
+    where a.title = 'Welcome!'$$,
+  'a professor can attach up to 8 photos'
+);
+select throws_ok(
+  $$insert into public.announcement_images (announcement_id, path, position)
+    select id, id::text || '/ninth.jpg', 8 from public.announcements where title = 'Welcome!'$$,
+  '23514',
+  null,
+  'a ninth photo is refused'
+);
+select lives_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('announcement-images', 'professor-upload.jpg')$$,
+  'a professor can upload to the photo bucket'
+);
+select is(
+  (select count(*)::int from storage.objects where bucket_id = 'announcement-images'),
+  1,
+  'a professor can look up photo files (needed to delete them)'
+);
 select is(
   (select count(*)::int from public.profiles),
   1,
@@ -144,6 +173,30 @@ select is(
   (select count(*)::int from public.announcements where title = 'Welcome!'),
   1,
   'a student cannot delete announcements'
+);
+select is(
+  (select count(*)::int from public.announcement_images),
+  8,
+  'a student can see announcement photos'
+);
+select throws_ok(
+  $$insert into public.announcement_images (announcement_id, path, position)
+    select id, id::text || '/student.jpg', 0 from public.announcements limit 1$$,
+  '42501',
+  null,
+  'a student cannot attach photos'
+);
+select throws_ok(
+  $$insert into storage.objects (bucket_id, name)
+    values ('announcement-images', 'student-upload.jpg')$$,
+  '42501',
+  null,
+  'a student cannot upload to the photo bucket'
+);
+select is(
+  (select count(*)::int from storage.objects where bucket_id = 'announcement-images'),
+  0,
+  'a student cannot list photo files'
 );
 reset role;
 
@@ -184,6 +237,11 @@ select is(
   (select count(*)::int from public.announcements),
   0,
   'a suspended user cannot read announcements'
+);
+select is(
+  (select count(*)::int from public.announcement_images),
+  0,
+  'a suspended user cannot see announcement photos'
 );
 
 select * from finish();

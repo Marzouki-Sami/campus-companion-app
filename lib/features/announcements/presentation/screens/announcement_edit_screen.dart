@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
+import 'package:campus_companion/features/announcements/domain/announcement_image.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
+import 'package:campus_companion/features/announcements/presentation/widgets/photo_editor.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 
 class AnnouncementEditArgs {
@@ -26,6 +28,8 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
   late final TextEditingController _title;
   late final TextEditingController _body;
   late final Set<String> _selectedCategoryIds;
+  late List<AnnouncementImage> _storedImages;
+  List<NewImage> _addedImages = const [];
 
   Announcement? get _existing => widget.args?.announcement;
 
@@ -35,6 +39,7 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
     _title = TextEditingController(text: _existing?.title ?? '');
     _body = TextEditingController(text: _existing?.body ?? '');
     _selectedCategoryIds = {...?_existing?.categories};
+    _storedImages = [...?_existing?.images];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<CategoryProvider>().loadCategories();
     });
@@ -59,6 +64,7 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
             title: _title.text.trim(),
             body: _body.text.trim(),
             categories: _selectedCategoryIds.toList(),
+            images: _storedImages,
           )
         : Announcement(
             id: '',
@@ -68,7 +74,10 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
             categories: _selectedCategoryIds.toList(),
           );
 
-    final ok = await provider.addOrUpdateAnnouncement(announcement);
+    final ok = await provider.addOrUpdateAnnouncement(
+      announcement,
+      newImages: _addedImages,
+    );
     if (ok) {
       navigator.pop();
     } else {
@@ -122,6 +131,13 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
                 validator: (v) => v == null || v.trim().isEmpty
                     ? 'Please enter a message'
                     : null,
+              ),
+              const SizedBox(height: 24),
+              PhotoEditor(
+                stored: _storedImages,
+                added: _addedImages,
+                onStoredChanged: (v) => setState(() => _storedImages = v),
+                onAddedChanged: (v) => setState(() => _addedImages = v),
               ),
               const SizedBox(height: 24),
               Text('Categories', style: theme.textTheme.titleSmall),

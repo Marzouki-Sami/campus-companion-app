@@ -20,7 +20,7 @@
 | Area | Highlights |
 | --- | --- |
 | **Dashboard** | Personal greeting, open/overdue task counters, next tasks and the latest announcements at a glance |
-| **Announcements** | Category chips, full-text search, time-range filter; professors and admins can publish, edit and delete |
+| **Announcements** | Category chips, full-text search, time-range filter; professors and admins can publish, edit and delete, and attach up to 8 photos shown as a swipeable carousel with a full-screen, pinch-to-zoom viewer |
 | **Tasks** | Due dates with relative wording ("Due tomorrow", "3 days overdue"), status and overdue filters, search, pull-to-refresh |
 | **Administration** | Tabbed dashboard to manage users (role, suspension, name, account deletion) and announcement categories |
 | **Accounts** | Email/password sign-up with **email verification** (6-digit code), a strong-password policy with a live checklist, **forgot-password** by emailed code, profile editing |
@@ -117,6 +117,7 @@ Everything is denied by default and the [migration](supabase/migrations/20260101
 - **Bot protection (optional).** With a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) site key the app shows a short challenge before sign-in, sign-up, resending a code and password reset, and Supabase refuses requests without a valid token. Off by default so the project runs with no external account.
 - **Only an admin can delete an account**; users cannot delete their own. Deleting needs the service-role key, which must never ship in an app, so the app calls the [`admin-delete-user`](supabase/functions/admin-delete-user/index.ts) Edge Function. It verifies the caller's token, requires the admin role, refuses self-deletion, and then removes the user; the database cascades to their profile and tasks (announcements they wrote are kept).
 - Announcements are saved through one SQL function so the text and its categories change atomically.
+- **Photos** live in a Storage bucket that accepts only JPEG, PNG and WebP up to 5 MB, uploaded by professors and admins only; photos are shrunk to 1600 px on the device first, and the database refuses a ninth photo on an announcement. The bucket is public-read with unguessable paths, so anyone holding a link can view a photo; make it private and use signed URLs if your announcements are sensitive.
 - The [pgTAP tests](supabase/tests/database/rls.test.sql) attack these rules (self-promotion, reading other people's tasks, publishing as a student, ...) and run in CI.
 
 ## Getting started
