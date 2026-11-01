@@ -168,7 +168,7 @@ Everything is denied by default and the [migration](supabase/migrations/20260101
 
 ### Prerequisites
 
-- [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.24 or newer
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) 3.47 or newer
 - [Docker](https://www.docker.com/products/docker-desktop/) (runs a local Supabase) and Node 18+
 
 ### Run it locally (no account needed)
