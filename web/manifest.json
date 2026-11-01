@@ -1,11 +1,11 @@
 {
-    "name": "campus_companion",
-    "short_name": "campus_companion",
+    "name": "Campus Companion",
+    "short_name": "Campus Companion",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Announcements, tasks and administration for university life.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
