@@ -56,6 +56,14 @@ Access control is enforced **in the database** with Postgres Row Level Security,
   </tr>
 </table>
 
+### Announcement photos
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/13-announcement-photos.png" alt="Announcement with a swipeable photo carousel" width="220" /></td>
+  </tr>
+</table>
+
 ## Architecture
 
 The code is organised **feature-first**. Each feature owns its three layers, and dependencies only point inwards:

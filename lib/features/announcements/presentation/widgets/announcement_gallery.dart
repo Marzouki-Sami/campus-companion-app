@@ -80,7 +80,6 @@ class _AnnouncementGalleryState extends State<AnnouncementGallery> {
   @override
   Widget build(BuildContext context) {
     final images = widget.images;
-    final scheme = Theme.of(context).colorScheme;
 
     return AspectRatio(
       aspectRatio: 16 / 10,
@@ -103,6 +102,21 @@ class _AnnouncementGalleryState extends State<AnnouncementGallery> {
               ),
             ),
             if (images.length > 1) ...[
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 64,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.transparent, Colors.black45],
+                    ),
+                  ),
+                ),
+              ),
               Positioned(
                 top: 12,
                 right: 12,
@@ -135,7 +149,7 @@ class _AnnouncementGalleryState extends State<AnnouncementGallery> {
                         width: i == _page ? 18 : 6,
                         height: 6,
                         decoration: BoxDecoration(
-                          color: i == _page ? scheme.primary : Colors.white70,
+                          color: i == _page ? Colors.white : Colors.white54,
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),
