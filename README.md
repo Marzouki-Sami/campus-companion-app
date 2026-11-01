@@ -20,7 +20,8 @@
 | Area | Highlights |
 | --- | --- |
 | **Dashboard** | Personal greeting, open/overdue task counters, next tasks and the latest announcements at a glance |
-| **Announcements** | Category chips, full-text search, time-range filter; professors and admins can publish, edit and delete, attach up to 8 photos (swipeable carousel, full-screen pinch-to-zoom viewer) and mark an announcement as an **event** with a date, time and place |
+| **Announcements** | Category chips, full-text search, time-range filter; professors and admins can publish, edit and delete, pin, attach up to 8 photos (swipeable carousel, full-screen pinch-to-zoom viewer) and mark an announcement as an **event** with a date, time and place |
+| **Pinned and unread** | Important announcements can be pinned to the top; unread ones get a dot and the News tab shows a count (read state is private to each user), with *Mark all as read* |
 | **Events** | Event announcements show their date and place on the card, have an *Add to calendar* button, and the dashboard lists the next ones under *Upcoming events* |
 | **Tasks** | Due dates with relative wording ("Due tomorrow", "3 days overdue"), status and overdue filters, search, pull-to-refresh |
 | **Administration** | Tabbed dashboard to manage users (role, suspension, name, account deletion) and announcement categories |
