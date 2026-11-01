@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:campus_companion/core/offline/local_cache.dart';
+import 'package:campus_companion/core/offline/offline_state.dart';
 import 'package:campus_companion/core/routing/app_router.dart';
 import 'package:campus_companion/core/routing/root_navigator.dart';
 import 'package:campus_companion/core/theme/app_theme.dart';
@@ -21,7 +23,7 @@ import 'package:campus_companion/features/tasks/presentation/providers/task_prov
 
 /// Repositories the app depends on, injected so they can be replaced in tests.
 class AppDependencies {
-  const AppDependencies({
+  AppDependencies({
     required this.authRepository,
     required this.userRepository,
     required this.taskRepository,
@@ -30,7 +32,10 @@ class AppDependencies {
     required this.settingsRepository,
     this.passwordBreachChecker = const NoPasswordBreachCheck(),
     this.reminderService = const NoReminders(),
-  });
+    LocalCache? localCache,
+    OfflineState? offlineState,
+  })  : localCache = localCache ?? MemoryCache(),
+        offlineState = offlineState ?? OfflineState();
 
   final AuthRepository authRepository;
   final UserRepository userRepository;
@@ -40,6 +45,8 @@ class AppDependencies {
   final SettingsRepository settingsRepository;
   final PasswordBreachChecker passwordBreachChecker;
   final ReminderService reminderService;
+  final LocalCache localCache;
+  final OfflineState offlineState;
 }
 
 class CampusCompanionApp extends StatelessWidget {
@@ -51,6 +58,10 @@ class CampusCompanionApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<LocalCache>.value(value: dependencies.localCache),
+        ChangeNotifierProvider<OfflineState>.value(
+          value: dependencies.offlineState,
+        ),
         ChangeNotifierProvider(
           create: (_) => AuthProvider(
             dependencies.authRepository,
