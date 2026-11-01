@@ -10,7 +10,8 @@ import 'package:campus_companion/features/announcements/domain/announcement_repo
 
 const imagesBucket = 'announcement-images';
 
-const _columns = 'id, title, body, created_at, '
+const _columns =
+    'id, title, body, created_at, event_start, event_end, location, '
     'announcement_categories(category_id), announcement_images(path, position)';
 
 Announcement announcementFromRow(
@@ -32,6 +33,9 @@ Announcement announcementFromRow(
       for (final link in links)
         (link as Map<String, dynamic>)['category_id'] as String,
     ],
+    eventStart: _parseDate(row['event_start']),
+    eventEnd: _parseDate(row['event_end']),
+    location: row['location'] as String?,
     images: [
       for (final image in imageRows)
         AnnouncementImage(
@@ -42,6 +46,9 @@ Announcement announcementFromRow(
     ],
   );
 }
+
+DateTime? _parseDate(Object? value) =>
+    value == null ? null : DateTime.parse(value as String).toLocal();
 
 class SupabaseAnnouncementRepository implements AnnouncementRepository {
   SupabaseAnnouncementRepository(this._client);
@@ -77,6 +84,9 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
           'p_title': announcement.title,
           'p_body': announcement.body,
           'p_category_ids': announcement.categories,
+          'p_event_start': announcement.eventStart?.toUtc().toIso8601String(),
+          'p_event_end': announcement.eventEnd?.toUtc().toIso8601String(),
+          'p_location': announcement.location,
         },
       );
       await _syncImages(id, announcement.images, newImages);

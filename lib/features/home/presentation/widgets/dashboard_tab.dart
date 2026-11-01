@@ -5,6 +5,7 @@ import 'package:campus_companion/core/utils/date_format.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_detail_screen.dart';
 import 'package:campus_companion/features/announcements/presentation/widgets/announcement_card.dart';
+import 'package:campus_companion/features/announcements/presentation/widgets/upcoming_events.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 import 'package:campus_companion/features/tasks/domain/task_filter.dart';
@@ -55,6 +56,10 @@ class DashboardTab extends StatelessWidget {
         .where((a) => a.createdAt.isAfter(weekAgo))
         .length;
     final latest = announcements.announcements.take(3).toList();
+    final events = UpcomingEvents.upcoming(
+      announcements.announcements,
+      now: now,
+    );
 
     final name = (user?.displayName?.trim().isNotEmpty ?? false)
         ? user!.displayName!.trim().split(' ').first
@@ -124,6 +129,18 @@ class DashboardTab extends StatelessWidget {
                     arguments: TaskEditArgs(task: t),
                   ),
                 ),
+            if (events.isNotEmpty) ...[
+              const SizedBox(height: 28),
+              const _SectionHeader(title: 'Upcoming events'),
+              UpcomingEvents(
+                events: events,
+                onOpen: (a) => Navigator.pushNamed(
+                  context,
+                  AnnouncementDetailScreen.routeName,
+                  arguments: AnnouncementDetailArgs(announcement: a),
+                ),
+              ),
+            ],
             const SizedBox(height: 28),
             _SectionHeader(
               title: 'Latest announcements',
@@ -243,10 +260,10 @@ class _StatCard extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, required this.onSeeAll});
+  const _SectionHeader({required this.title, this.onSeeAll});
 
   final String title;
-  final VoidCallback onSeeAll;
+  final VoidCallback? onSeeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -263,7 +280,8 @@ class _SectionHeader extends StatelessWidget {
                   ?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
-          TextButton(onPressed: onSeeAll, child: const Text('See all')),
+          if (onSeeAll != null)
+            TextButton(onPressed: onSeeAll, child: const Text('See all')),
         ],
       ),
     );

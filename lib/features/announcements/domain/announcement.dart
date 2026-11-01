@@ -8,6 +8,9 @@ class Announcement {
     required this.createdAt,
     this.categories = const [],
     this.images = const [],
+    this.eventStart,
+    this.eventEnd,
+    this.location,
   });
 
   final String id;
@@ -21,6 +24,17 @@ class Announcement {
   /// Photos in display order; the first one is the cover.
   final List<AnnouncementImage> images;
 
+  /// Set when the announcement describes an event. [eventEnd] and [location]
+  /// are optional details of it.
+  final DateTime? eventStart;
+  final DateTime? eventEnd;
+  final String? location;
+
+  bool get isEvent => eventStart != null;
+
+  /// The moment the event stops being relevant: its end, or its start.
+  DateTime? get eventOver => eventEnd ?? eventStart;
+
   Announcement copyWith({
     String? id,
     String? title,
@@ -28,6 +42,10 @@ class Announcement {
     DateTime? createdAt,
     List<String>? categories,
     List<AnnouncementImage>? images,
+    DateTime? eventStart,
+    DateTime? eventEnd,
+    String? location,
+    bool clearEvent = false,
   }) {
     return Announcement(
       id: id ?? this.id,
@@ -36,6 +54,9 @@ class Announcement {
       createdAt: createdAt ?? this.createdAt,
       categories: categories ?? this.categories,
       images: images ?? this.images,
+      eventStart: clearEvent ? null : eventStart ?? this.eventStart,
+      eventEnd: clearEvent ? null : eventEnd ?? this.eventEnd,
+      location: clearEvent ? null : location ?? this.location,
     );
   }
 }

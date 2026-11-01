@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_companion/core/utils/date_format.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
 import 'package:campus_companion/features/announcements/presentation/widgets/announcement_gallery.dart';
+import 'package:campus_companion/features/announcements/presentation/widgets/event_summary.dart';
 import 'package:campus_companion/features/categories/domain/announcement_category.dart';
 
 class AnnouncementCard extends StatelessWidget {
@@ -113,6 +114,10 @@ class AnnouncementCard extends StatelessWidget {
                     style: theme.textTheme.bodyMedium
                         ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
+                  if (announcement.isEvent) ...[
+                    const SizedBox(height: 10),
+                    EventSummary(announcement: announcement, compact: true),
+                  ],
                   if (names.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Wrap(

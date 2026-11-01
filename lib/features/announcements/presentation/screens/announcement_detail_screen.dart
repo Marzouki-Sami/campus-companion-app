@@ -6,6 +6,7 @@ import 'package:campus_companion/features/announcements/domain/announcement.dart
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_edit_screen.dart';
 import 'package:campus_companion/features/announcements/presentation/widgets/announcement_gallery.dart';
+import 'package:campus_companion/features/announcements/presentation/widgets/event_summary.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 
@@ -120,6 +121,10 @@ class AnnouncementDetailScreen extends StatelessWidget {
                     ),
                 ],
               ),
+            ],
+            if (a.isEvent) ...[
+              const SizedBox(height: 20),
+              EventPanel(announcement: a),
             ],
             const SizedBox(height: 24),
             if (a.images.isNotEmpty) ...[
