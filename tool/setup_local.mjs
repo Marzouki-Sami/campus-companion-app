@@ -127,6 +127,7 @@ for (const [title, body, category, ageInDays, event] of announcements) {
         body,
         created_by: professorId,
         created_at: daysFromNow(-ageInDays),
+        is_pinned: title === 'Midterm schedule published',
         ...(start && {
           event_start: start.toISOString(),
           event_end: new Date(start.getTime() + event.hours * 3600000).toISOString(),

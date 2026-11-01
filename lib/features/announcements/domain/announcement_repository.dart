@@ -15,4 +15,9 @@ abstract interface class AnnouncementRepository {
   });
 
   Future<void> delete(String id);
+
+  /// Ids of the announcements the signed-in user has already opened.
+  Future<Set<String>> fetchReadIds();
+
+  Future<void> markRead(Iterable<String> ids);
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/utils/date_format.dart';
+import 'package:campus_companion/core/widgets/run_once.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_edit_screen.dart';
@@ -68,71 +69,75 @@ class AnnouncementDetailScreen extends StatelessWidget {
           if (c.id == id) c.name,
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Announcement'),
-        actions: [
-          if (canManage) ...[
-            IconButton(
-              tooltip: 'Edit',
-              icon: const Icon(Icons.edit_outlined),
-              onPressed: () => Navigator.pushNamed(
-                context,
-                AnnouncementEditScreen.routeName,
-                arguments: AnnouncementEditArgs(announcement: a),
+    return RunOnce(
+      onRun: () => context.read<AnnouncementProvider>().markRead(a.id),
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Announcement'),
+          actions: [
+            if (canManage) ...[
+              IconButton(
+                tooltip: 'Edit',
+                icon: const Icon(Icons.edit_outlined),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  AnnouncementEditScreen.routeName,
+                  arguments: AnnouncementEditArgs(announcement: a),
+                ),
               ),
-            ),
-            IconButton(
-              tooltip: 'Delete',
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _delete(context, a),
-            ),
+              IconButton(
+                tooltip: 'Delete',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: () => _delete(context, a),
+              ),
+            ],
           ],
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              a.title,
-              style: theme.textTheme.headlineSmall
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              formatDate(a.createdAt),
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            if (names.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: [
-                  for (final name in names)
-                    Chip(
-                      label: Text(name),
-                      side: BorderSide.none,
-                      backgroundColor: scheme.secondaryContainer,
-                      labelStyle: TextStyle(color: scheme.onSecondaryContainer),
-                    ),
-                ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                a.title,
+                style: theme.textTheme.headlineSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
-            ],
-            if (a.isEvent) ...[
-              const SizedBox(height: 20),
-              EventPanel(announcement: a),
-            ],
-            const SizedBox(height: 24),
-            if (a.images.isNotEmpty) ...[
-              AnnouncementGallery(images: a.images),
+              const SizedBox(height: 8),
+              Text(
+                formatDate(a.createdAt),
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              if (names.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final name in names)
+                      Chip(
+                        label: Text(name),
+                        side: BorderSide.none,
+                        backgroundColor: scheme.secondaryContainer,
+                        labelStyle:
+                            TextStyle(color: scheme.onSecondaryContainer),
+                      ),
+                  ],
+                ),
+              ],
+              if (a.isEvent) ...[
+                const SizedBox(height: 20),
+                EventPanel(announcement: a),
+              ],
               const SizedBox(height: 24),
+              if (a.images.isNotEmpty) ...[
+                AnnouncementGallery(images: a.images),
+                const SizedBox(height: 24),
+              ],
+              SelectableText(a.body, style: theme.textTheme.bodyLarge),
             ],
-            SelectableText(a.body, style: theme.textTheme.bodyLarge),
-          ],
+          ),
         ),
       ),
     );

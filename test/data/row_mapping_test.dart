@@ -116,6 +116,49 @@ void main() {
       expect(announcement.images.first.url, 'https://files.test/a1/first.jpg');
     });
 
+    test('reads the event details', () {
+      final announcement = announcementFromRow({
+        'id': 'a1',
+        'title': 'Open day',
+        'body': 'Come along',
+        'created_at': '2026-03-05T10:00:00+00:00',
+        'event_start': '2026-04-01T09:00:00+00:00',
+        'event_end': '2026-04-01T12:00:00+00:00',
+        'location': 'Main hall',
+      });
+
+      expect(announcement.isEvent, isTrue);
+      expect(announcement.eventStart, DateTime.utc(2026, 4, 1, 9).toLocal());
+      expect(announcement.eventEnd, DateTime.utc(2026, 4, 1, 12).toLocal());
+      expect(announcement.location, 'Main hall');
+    });
+
+    test('a plain announcement is not an event or pinned', () {
+      final announcement = announcementFromRow({
+        'id': 'a1',
+        'title': 'Hello',
+        'body': 'World',
+        'created_at': '2026-03-05T10:00:00+00:00',
+        'event_start': null,
+      });
+
+      expect(announcement.isEvent, isFalse);
+      expect(announcement.isPinned, isFalse);
+      expect(announcement.location, isNull);
+    });
+
+    test('reads the pinned flag', () {
+      final announcement = announcementFromRow({
+        'id': 'a1',
+        'title': 'Hello',
+        'body': 'World',
+        'created_at': '2026-03-05T10:00:00+00:00',
+        'is_pinned': true,
+      });
+
+      expect(announcement.isPinned, isTrue);
+    });
+
     test('an announcement without photos has none', () {
       final announcement = announcementFromRow({
         'id': 'a1',

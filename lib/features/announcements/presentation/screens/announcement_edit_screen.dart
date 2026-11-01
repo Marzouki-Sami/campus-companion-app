@@ -30,6 +30,7 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
   late final TextEditingController _body;
   late final TextEditingController _location;
   late bool _isEvent;
+  late bool _isPinned;
   DateTime? _start;
   DateTime? _end;
   String? _eventError;
@@ -46,6 +47,7 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
     _body = TextEditingController(text: _existing?.body ?? '');
     _location = TextEditingController(text: _existing?.location ?? '');
     _isEvent = _existing?.isEvent ?? false;
+    _isPinned = _existing?.isPinned ?? false;
     _start = _existing?.eventStart;
     _end = _existing?.eventEnd;
     _selectedCategoryIds = {...?_existing?.categories};
@@ -91,6 +93,7 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
       createdAt: existing?.createdAt ?? DateTime.now(),
       categories: _selectedCategoryIds.toList(),
       images: _storedImages,
+      isPinned: _isPinned,
       eventStart: _isEvent ? _start : null,
       eventEnd: _isEvent ? _end : null,
       location: _isEvent && _location.text.trim().isNotEmpty
@@ -163,7 +166,15 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
                 onStoredChanged: (v) => setState(() => _storedImages = v),
                 onAddedChanged: (v) => setState(() => _addedImages = v),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title:
+                    Text('Pin to the top', style: theme.textTheme.titleSmall),
+                subtitle: const Text('Keep it above newer announcements'),
+                value: _isPinned,
+                onChanged: (v) => setState(() => _isPinned = v),
+              ),
               EventFields(
                 isEvent: _isEvent,
                 start: _start,

@@ -1,10 +1,43 @@
 import 'dart:async';
 
 import 'package:campus_companion/core/errors/app_exception.dart';
+import 'package:campus_companion/features/announcements/domain/announcement.dart';
+import 'package:campus_companion/features/announcements/domain/announcement_image.dart';
+import 'package:campus_companion/features/announcements/domain/announcement_repository.dart';
 import 'package:campus_companion/features/auth/domain/app_user.dart';
 import 'package:campus_companion/features/auth/domain/auth_repository.dart';
 import 'package:campus_companion/features/tasks/domain/task.dart';
 import 'package:campus_companion/features/tasks/domain/task_repository.dart';
+
+class FakeAnnouncementRepository implements AnnouncementRepository {
+  FakeAnnouncementRepository(this.items, {Set<String> read = const {}})
+      : readIds = {...read};
+
+  final List<Announcement> items;
+  final Set<String> readIds;
+  bool failMarkRead = false;
+
+  @override
+  Future<List<Announcement>> fetchAll() async => List.of(items);
+
+  @override
+  Future<void> save(
+    Announcement announcement, {
+    List<NewImage> newImages = const [],
+  }) async {}
+
+  @override
+  Future<void> delete(String id) async => items.removeWhere((a) => a.id == id);
+
+  @override
+  Future<Set<String>> fetchReadIds() async => {...readIds};
+
+  @override
+  Future<void> markRead(Iterable<String> ids) async {
+    if (failMarkRead) throw const AppException('offline');
+    readIds.addAll(ids);
+  }
+}
 
 class FakeUserRepository implements UserRepository {
   FakeUserRepository(List<AppUser> users) : users = List.of(users);

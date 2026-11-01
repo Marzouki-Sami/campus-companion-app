@@ -1,6 +1,6 @@
 begin;
 
-select plan(41);
+select plan(47);
 
 -- Fixtures (run as the superuser, so auth.uid() is null and triggers trust us)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -186,6 +186,17 @@ select is(
   null,
   'the event date was cleared'
 );
+select lives_ok(
+  $$select public.save_announcement(
+      (select id from public.announcements where title = 'Open day'),
+      'Open day', 'Come along', '{}', null, null, null, true)$$,
+  'a professor can pin an announcement'
+);
+select is(
+  (select is_pinned from public.announcements where title = 'Open day'),
+  true,
+  'the announcement is pinned'
+);
 select is(
   (select count(*)::int from public.profiles),
   1,
@@ -233,6 +244,25 @@ select is(
   0,
   'a student cannot list photo files'
 );
+update public.announcements set is_pinned = true where title = 'Welcome!';
+select is(
+  (select is_pinned from public.announcements where title = 'Welcome!'),
+  false,
+  'a student cannot pin an announcement'
+);
+select lives_ok(
+  $$insert into public.announcement_reads (announcement_id)
+    select id from public.announcements where title = 'Welcome!'$$,
+  'a student can mark an announcement as read'
+);
+select throws_ok(
+  $$insert into public.announcement_reads (user_id, announcement_id)
+    select '00000000-0000-0000-0000-000000000002', id
+    from public.announcements where title = 'Welcome!'$$,
+  '42501',
+  null,
+  'a student cannot mark things as read for someone else'
+);
 reset role;
 
 -- Admin ---------------------------------------------------------------------
@@ -244,6 +274,11 @@ select is(
   (select count(*)::int from public.profiles),
   (select profiles from expected),
   'an admin sees every profile'
+);
+select is(
+  (select count(*)::int from public.announcement_reads),
+  0,
+  'an admin cannot see other people''s read state'
 );
 select lives_ok(
   $$update public.profiles set role = 'professor' where id = '00000000-0000-0000-0000-000000000002'$$,

@@ -78,6 +78,12 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
       appBar: AppBar(
         title: const Text('News'),
         actions: [
+          if (provider.unreadCount > 0)
+            IconButton(
+              tooltip: 'Mark all as read',
+              icon: const Icon(Icons.done_all),
+              onPressed: provider.markAllRead,
+            ),
           PopupMenuButton<Duration?>(
             tooltip: 'Time range',
             icon: Icon(
@@ -219,6 +225,7 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
         final a = announcements[index];
         return AnnouncementCard(
           announcement: a,
+          isUnread: provider.isUnread(a.id),
           categories: context.read<CategoryProvider>().categories,
           onTap: () => Navigator.pushNamed(
             context,

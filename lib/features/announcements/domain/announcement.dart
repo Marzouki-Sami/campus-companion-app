@@ -11,6 +11,7 @@ class Announcement {
     this.eventStart,
     this.eventEnd,
     this.location,
+    this.isPinned = false,
   });
 
   final String id;
@@ -30,6 +31,9 @@ class Announcement {
   final DateTime? eventEnd;
   final String? location;
 
+  /// Pinned announcements stay at the top of the list.
+  final bool isPinned;
+
   bool get isEvent => eventStart != null;
 
   /// The moment the event stops being relevant: its end, or its start.
@@ -45,6 +49,7 @@ class Announcement {
     DateTime? eventStart,
     DateTime? eventEnd,
     String? location,
+    bool? isPinned,
     bool clearEvent = false,
   }) {
     return Announcement(
@@ -57,6 +62,7 @@ class Announcement {
       eventStart: clearEvent ? null : eventStart ?? this.eventStart,
       eventEnd: clearEvent ? null : eventEnd ?? this.eventEnd,
       location: clearEvent ? null : location ?? this.location,
+      isPinned: isPinned ?? this.isPinned,
     );
   }
 }
