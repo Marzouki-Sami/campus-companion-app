@@ -27,6 +27,15 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
   late final TextEditingController _title;
   late final TextEditingController _description;
   DateTime? _dueDate;
+  int? _remindDays;
+
+  static const _reminderChoices = <(int?, String)>[
+    (null, 'No reminder'),
+    (0, 'On the day, 9:00'),
+    (1, '1 day before, 9:00'),
+    (2, '2 days before, 9:00'),
+    (7, '1 week before, 9:00'),
+  ];
 
   Task? get _existing => widget.args?.task;
 
@@ -36,6 +45,7 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
     _title = TextEditingController(text: _existing?.title ?? '');
     _description = TextEditingController(text: _existing?.description ?? '');
     _dueDate = _existing?.dueDate;
+    _remindDays = _existing?.remindDaysBefore;
   }
 
   @override
@@ -74,7 +84,18 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
       description: description.isEmpty ? null : description,
       dueDate: _dueDate,
       isDone: _existing?.isDone ?? false,
+      remindDaysBefore: _dueDate == null ? null : _remindDays,
     );
+
+    if (task.remindDaysBefore != null && !await provider.allowReminders()) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Notifications are off for this app, so the reminder will not show.',
+          ),
+        ),
+      );
+    }
 
     final ok = await provider.addOrUpdateTask(userId, task);
     if (ok) {
@@ -147,6 +168,21 @@ class _TaskEditScreenState extends State<TaskEditScreen> {
                   ),
                 ),
               ),
+              if (_dueDate != null) ...[
+                const SizedBox(height: 16),
+                DropdownButtonFormField<int?>(
+                  initialValue: _remindDays,
+                  decoration: const InputDecoration(
+                    labelText: 'Reminder',
+                    prefixIcon: Icon(Icons.notifications_outlined),
+                  ),
+                  items: [
+                    for (final (days, label) in _reminderChoices)
+                      DropdownMenuItem(value: days, child: Text(label)),
+                  ],
+                  onChanged: (v) => setState(() => _remindDays = v),
+                ),
+              ],
               const SizedBox(height: 32),
               FilledButton(
                 onPressed: isLoading ? null : _save,

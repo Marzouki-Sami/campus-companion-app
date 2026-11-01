@@ -6,6 +6,7 @@ import 'package:campus_companion/features/announcements/domain/announcement_imag
 import 'package:campus_companion/features/announcements/domain/announcement_repository.dart';
 import 'package:campus_companion/features/auth/domain/app_user.dart';
 import 'package:campus_companion/features/auth/domain/auth_repository.dart';
+import 'package:campus_companion/features/tasks/domain/reminder_service.dart';
 import 'package:campus_companion/features/tasks/domain/task.dart';
 import 'package:campus_companion/features/tasks/domain/task_repository.dart';
 
@@ -37,6 +38,25 @@ class FakeAnnouncementRepository implements AnnouncementRepository {
     if (failMarkRead) throw const AppException('offline');
     readIds.addAll(ids);
   }
+}
+
+class FakeReminderService implements ReminderService {
+  final List<List<Task>> synced = [];
+  int cancelCount = 0;
+  bool allowed = true;
+  bool failSync = false;
+
+  @override
+  Future<bool> requestPermission() async => allowed;
+
+  @override
+  Future<void> sync(List<Task> tasks) async {
+    if (failSync) throw StateError('boom');
+    synced.add(tasks);
+  }
+
+  @override
+  Future<void> cancelAll() async => cancelCount++;
 }
 
 class FakeUserRepository implements UserRepository {

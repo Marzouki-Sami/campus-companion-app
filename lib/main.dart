@@ -13,7 +13,9 @@ import 'package:campus_companion/features/auth/data/turnstile_captcha_solver.dar
 import 'package:campus_companion/features/auth/domain/captcha_solver.dart';
 import 'package:campus_companion/features/categories/data/supabase_category_repository.dart';
 import 'package:campus_companion/features/settings/data/shared_preferences_settings_repository.dart';
+import 'package:campus_companion/features/tasks/data/local_reminder_service.dart';
 import 'package:campus_companion/features/tasks/data/supabase_task_repository.dart';
+import 'package:campus_companion/features/tasks/domain/reminder_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +35,8 @@ Future<void> main() async {
       ? const NoCaptcha()
       : TurnstileCaptchaSolver(AppConfig.turnstileSiteKey);
 
+  final ReminderService reminders = await _createReminders();
+
   runApp(
     CampusCompanionApp(
       dependencies: AppDependencies(
@@ -49,7 +53,17 @@ Future<void> main() async {
           await SharedPreferences.getInstance(),
         ),
         passwordBreachChecker: HibpBreachChecker(),
+        reminderService: reminders,
       ),
     ),
   );
+}
+
+/// Reminders are optional: if notifications cannot start, the app still works.
+Future<ReminderService> _createReminders() async {
+  try {
+    return await LocalReminderService.create();
+  } catch (_) {
+    return const NoReminders();
+  }
 }

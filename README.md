@@ -23,7 +23,7 @@
 | **Announcements** | Category chips, full-text search, time-range filter; professors and admins can publish, edit and delete, pin, attach up to 8 photos (swipeable carousel, full-screen pinch-to-zoom viewer) and mark an announcement as an **event** with a date, time and place |
 | **Pinned and unread** | Important announcements can be pinned to the top; unread ones get a dot and the News tab shows a count (read state is private to each user), with *Mark all as read* |
 | **Events** | Event announcements show their date and place on the card, have an *Add to calendar* button, and the dashboard lists the next ones under *Upcoming events* |
-| **Tasks** | Due dates with relative wording ("Due tomorrow", "3 days overdue"), status and overdue filters, search, pull-to-refresh |
+| **Tasks** | Due dates with relative wording ("Due tomorrow", "3 days overdue"), status and overdue filters, search, pull-to-refresh, and optional **reminders** (a notification at 9:00 on the due day or up to a week before; scheduled on the device, so they work offline) |
 | **Administration** | Tabbed dashboard to manage users (role, suspension, name, account deletion) and announcement categories |
 | **Accounts** | Email/password sign-up with **email verification** (6-digit code), a strong-password policy with a live checklist, **forgot-password** by emailed code, profile editing |
 | **Account safety** | Suspended or deleted accounts are blocked at sign-in, signed out when the app resumes, and denied by the database; breached passwords are refused |

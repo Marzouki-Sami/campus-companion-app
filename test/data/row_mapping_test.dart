@@ -53,6 +53,17 @@ void main() {
       expect(task.isDone, isTrue);
     });
 
+    test('reads the reminder', () {
+      final task = taskFromRow({
+        'id': 't1',
+        'title': 'Essay',
+        'due_date': '2030-06-20T00:00:00+00:00',
+        'remind_days_before': 2,
+      });
+
+      expect(task.remindDaysBefore, 2);
+    });
+
     test('handles tasks without a due date or description', () {
       final task = taskFromRow({
         'id': 't1',

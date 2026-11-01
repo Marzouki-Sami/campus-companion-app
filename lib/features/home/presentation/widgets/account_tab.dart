@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:campus_companion/features/admin/presentation/screens/admin_dashboard_screen.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
+import 'package:campus_companion/features/tasks/presentation/providers/task_provider.dart';
 import 'package:campus_companion/features/profile/presentation/screens/profile_screen.dart';
 import 'package:campus_companion/features/settings/presentation/screens/settings_screen.dart';
 
@@ -11,6 +12,7 @@ class AccountTab extends StatelessWidget {
 
   Future<void> _logout(BuildContext context) async {
     final auth = context.read<AuthProvider>();
+    final tasks = context.read<TaskProvider>();
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -30,6 +32,7 @@ class AccountTab extends StatelessWidget {
     );
     if (confirmed != true) return;
     await auth.logout();
+    await tasks.clear();
   }
 
   @override
