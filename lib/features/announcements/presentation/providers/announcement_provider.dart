@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:campus_companion/core/presentation/loading_state_mixin.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
+import 'package:campus_companion/features/announcements/domain/announcement_image.dart';
 import 'package:campus_companion/features/announcements/domain/announcement_repository.dart';
 
 class AnnouncementProvider extends ChangeNotifier with LoadingStateMixin {
@@ -18,9 +19,12 @@ class AnnouncementProvider extends ChangeNotifier with LoadingStateMixin {
     }, failureMessage: 'Failed to load announcements');
   }
 
-  Future<bool> addOrUpdateAnnouncement(Announcement announcement) {
+  Future<bool> addOrUpdateAnnouncement(
+    Announcement announcement, {
+    List<NewImage> newImages = const [],
+  }) {
     return runGuarded(() async {
-      await _repository.save(announcement);
+      await _repository.save(announcement, newImages: newImages);
       _announcements = await _repository.fetchAll();
     }, failureMessage: 'Failed to save announcement');
   }

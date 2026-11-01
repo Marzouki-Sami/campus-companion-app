@@ -95,6 +95,37 @@ void main() {
 
       expect(announcement.categories, isEmpty);
     });
+
+    test('orders photos by position and builds their urls', () {
+      final announcement = announcementFromRow(
+        {
+          'id': 'a1',
+          'title': 'Hello',
+          'body': 'World',
+          'created_at': '2026-03-05T10:00:00+00:00',
+          'announcement_images': [
+            {'path': 'a1/second.jpg', 'position': 1},
+            {'path': 'a1/first.jpg', 'position': 0},
+          ],
+        },
+        imageUrl: (path) => 'https://files.test/$path',
+      );
+
+      expect(announcement.images.map((i) => i.path),
+          ['a1/first.jpg', 'a1/second.jpg']);
+      expect(announcement.images.first.url, 'https://files.test/a1/first.jpg');
+    });
+
+    test('an announcement without photos has none', () {
+      final announcement = announcementFromRow({
+        'id': 'a1',
+        'title': 'Hello',
+        'body': 'World',
+        'created_at': '2026-03-05T10:00:00+00:00',
+      });
+
+      expect(announcement.images, isEmpty);
+    });
   });
 
   test('categoryFromRow maps the columns', () {
