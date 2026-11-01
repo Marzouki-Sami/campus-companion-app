@@ -14,6 +14,7 @@ by Row Level Security (see the *Security model* section of the README). Never pu
 
 ## Automated checks
 
-- Row Level Security is attacked by the pgTAP suite on every pull request.
+- Row Level Security, storage policies and database limits are attacked by the pgTAP suite on every pull request.
+- A from-scratch docker-compose smoke test confirms the Edge Function rejects unauthenticated calls.
 - [gitleaks](.github/workflows/secret-scan.yml) scans the code and history for secrets.
 - [Dependabot](.github/dependabot.yml) proposes dependency and GitHub Actions updates weekly.
