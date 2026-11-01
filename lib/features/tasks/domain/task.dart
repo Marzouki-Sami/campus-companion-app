@@ -5,6 +5,7 @@ class Task {
     this.description,
     this.dueDate,
     this.isDone = false,
+    this.remindDaysBefore,
   });
 
   final String id;
@@ -12,6 +13,9 @@ class Task {
   final String? description;
   final DateTime? dueDate;
   final bool isDone;
+
+  /// Days before the due date to be reminded (0 = on the day), or null.
+  final int? remindDaysBefore;
 
   /// A task is overdue once its due *day* has passed; due today is not overdue.
   bool isOverdueAt(DateTime now) {
@@ -29,6 +33,7 @@ class Task {
     String? description,
     DateTime? dueDate,
     bool? isDone,
+    int? remindDaysBefore,
   }) {
     return Task(
       id: id ?? this.id,
@@ -36,6 +41,7 @@ class Task {
       description: description ?? this.description,
       dueDate: dueDate ?? this.dueDate,
       isDone: isDone ?? this.isDone,
+      remindDaysBefore: remindDaysBefore ?? this.remindDaysBefore,
     );
   }
 }

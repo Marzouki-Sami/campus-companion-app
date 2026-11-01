@@ -13,6 +13,7 @@ Task taskFromRow(Map<String, dynamic> row) {
     description: row['description'] as String?,
     dueDate: due == null ? null : DateTime.parse(due).toLocal(),
     isDone: row['is_done'] as bool? ?? false,
+    remindDaysBefore: row['remind_days_before'] as int?,
   );
 }
 
@@ -41,6 +42,8 @@ class SupabaseTaskRepository implements TaskRepository {
         'description': task.description,
         'due_date': task.dueDate?.toUtc().toIso8601String(),
         'is_done': task.isDone,
+        'remind_days_before':
+            task.dueDate == null ? null : task.remindDaysBefore,
       };
       if (task.id.isEmpty) {
         await _client.from('tasks').insert({...values, 'user_id': userId});
