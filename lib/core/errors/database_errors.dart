@@ -5,25 +5,25 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:campus_companion/core/errors/app_exception.dart';
 
-const _offlineMessage = 'No connection. Check your internet and try again.';
-
 /// Runs a database call and converts transport and policy errors into
 /// [AppException]s whose messages are safe to show to users.
 Future<T> guardDb<T>(Future<T> Function() action) async {
   try {
     return await action();
   } on PostgrestException catch (e) {
-    throw AppException(_messageForPostgrest(e));
+    final message = _messageForPostgrest(e);
+    throw message == null ? const OfflineException() : AppException(message);
   } on SocketException {
-    throw const AppException(_offlineMessage);
+    throw const OfflineException();
   } on TimeoutException {
-    throw const AppException(_offlineMessage);
+    throw const OfflineException();
   } on AuthRetryableFetchException {
-    throw const AppException(_offlineMessage);
+    throw const OfflineException();
   }
 }
 
-String _messageForPostgrest(PostgrestException e) {
+/// A user-safe message, or null when the failure means we are offline.
+String? _messageForPostgrest(PostgrestException e) {
   switch (e.code) {
     case '42501':
       return 'You do not have permission to do that.';
@@ -37,7 +37,7 @@ String _messageForPostgrest(PostgrestException e) {
       final message = e.message.toLowerCase();
       if (message.contains('failed host lookup') ||
           message.contains('connection')) {
-        return _offlineMessage;
+        return null;
       }
       return 'Something went wrong. Please try again.';
   }

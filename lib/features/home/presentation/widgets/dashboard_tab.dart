@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/utils/date_format.dart';
+import 'package:campus_companion/core/widgets/offline_banner.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_detail_screen.dart';
 import 'package:campus_companion/features/announcements/presentation/widgets/announcement_card.dart';
@@ -57,7 +58,7 @@ class DashboardTab extends StatelessWidget {
         .length;
     final latest = announcements.announcements.take(3).toList();
     final events = UpcomingEvents.upcoming(
-      announcements.announcements,
+      announcements.upcomingEvents,
       now: now,
     );
 
@@ -73,6 +74,7 @@ class DashboardTab extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
+            const OfflineBanner(),
             Text(
               'Hello, $name',
               style: theme.textTheme.headlineMedium
@@ -110,8 +112,9 @@ class DashboardTab extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             _SectionHeader(title: 'Up next', onSeeAll: onSeeAllTasks),
-            if (userId == null)
-              const _Hint('Sign in to see your tasks.')
+            // The profile resolves a moment after a cold start.
+            if (userId == null || (tasks.isLoading && tasks.tasks.isEmpty))
+              const _Loading()
             else if (open.isEmpty)
               const _Hint('Nothing due. Enjoy the free time!')
             else
@@ -146,7 +149,9 @@ class DashboardTab extends StatelessWidget {
               title: 'Latest announcements',
               onSeeAll: onSeeAllAnnouncements,
             ),
-            if (latest.isEmpty)
+            if (latest.isEmpty && announcements.isLoading)
+              const _Loading()
+            else if (latest.isEmpty)
               const _Hint('No announcements yet.')
             else
               for (final a in latest)
@@ -284,6 +289,24 @@ class _SectionHeader extends StatelessWidget {
           if (onSeeAll != null)
             TextButton(onPressed: onSeeAll, child: const Text('See all')),
         ],
+      ),
+    );
+  }
+}
+
+class _Loading extends StatelessWidget {
+  const _Loading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 20),
+      child: Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2.5),
+        ),
       ),
     );
   }

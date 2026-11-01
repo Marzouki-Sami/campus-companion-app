@@ -32,8 +32,7 @@ class AdminDashboardScreen extends StatelessWidget {
     }
 
     final users = context.watch<UsersProvider>().users.length;
-    final announcements =
-        context.watch<AnnouncementProvider>().announcements.length;
+    final announcements = context.watch<AnnouncementProvider>().totalCount;
     final categories = context.watch<CategoryProvider>().categories.length;
 
     return DefaultTabController(

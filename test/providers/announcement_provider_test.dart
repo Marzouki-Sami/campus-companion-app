@@ -64,6 +64,75 @@ void main() {
 
     expect(provider.errorMessage, isNull);
   });
+  group('pagination', () {
+    late FakeAnnouncementRepository many;
+    late AnnouncementProvider paged;
+
+    setUp(() async {
+      many = FakeAnnouncementRepository([
+        for (var i = 0; i < 45; i++) _a('n$i'),
+      ]);
+      paged = AnnouncementProvider(many);
+      await paged.loadAnnouncements();
+    });
+
+    test('loads one page first and knows there is more', () {
+      expect(paged.announcements, hasLength(announcementPageSize));
+      expect(paged.hasMore, isTrue);
+    });
+
+    test('loadMore appends the next pages until the end', () async {
+      await paged.loadMore();
+      expect(paged.announcements, hasLength(40));
+      expect(paged.hasMore, isTrue);
+
+      await paged.loadMore();
+      expect(paged.announcements, hasLength(45));
+      expect(paged.hasMore, isFalse);
+      expect(paged.announcements.map((a) => a.id).toSet(), hasLength(45));
+    });
+
+    test('loadMore does nothing once everything is loaded', () async {
+      await paged.loadMore();
+      await paged.loadMore();
+      final requests = many.pageRequests;
+
+      await paged.loadMore();
+
+      expect(many.pageRequests, requests);
+    });
+
+    test('a failed page keeps what is already loaded', () async {
+      many.offline = true;
+
+      final ok = await paged.loadMore();
+
+      expect(ok, isFalse);
+      expect(paged.announcements, hasLength(announcementPageSize));
+      expect(paged.isLoadingMore, isFalse);
+    });
+
+    test('the unread and total counts cover every page', () {
+      expect(paged.unreadCount, 45);
+      expect(paged.totalCount, 45);
+    });
+
+    test('mark all as read clears the count for unloaded pages too', () async {
+      await paged.markAllRead();
+
+      expect(paged.unreadCount, 0);
+      expect(paged.isUnread('n44'), isFalse);
+    });
+  });
+
+  test('a failed mark-all restores the previous state', () async {
+    repository.offline = true;
+
+    await provider.markAllRead();
+
+    expect(provider.unreadCount, 2);
+    expect(provider.isUnread('b'), isTrue);
+  });
 }
 
 class _CountingRepository extends FakeAnnouncementRepository {

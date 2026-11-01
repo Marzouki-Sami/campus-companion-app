@@ -59,17 +59,63 @@ class SupabaseAnnouncementRepository implements AnnouncementRepository {
   StorageFileApi get _storage => _client.storage.from(imagesBucket);
 
   @override
-  Future<List<Announcement>> fetchAll() {
+  Future<List<Announcement>> fetchPage({
+    required int offset,
+    required int limit,
+  }) {
     return guardDb(() async {
       final rows = await _client
           .from('announcements')
           .select(_columns)
           .order('is_pinned', ascending: false)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .range(offset, offset + limit - 1);
       return [
         for (final row in rows)
           announcementFromRow(row, imageUrl: _storage.getPublicUrl),
       ];
+    });
+  }
+
+  @override
+  Future<List<Announcement>> fetchUpcomingEvents({
+    required DateTime now,
+    int limit = 5,
+  }) {
+    final cutoff = now.toUtc().toIso8601String();
+    return guardDb(() async {
+      final rows = await _client
+          .from('announcements')
+          .select(_columns)
+          .not('event_start', 'is', null)
+          .or('event_end.gte.$cutoff,and(event_end.is.null,event_start.gte.$cutoff)')
+          .order('event_start', ascending: true)
+          .limit(limit);
+      return [
+        for (final row in rows)
+          announcementFromRow(row, imageUrl: _storage.getPublicUrl),
+      ];
+    });
+  }
+
+  @override
+  Future<int> fetchUnreadCount() {
+    return guardDb(() async {
+      final count = await _client.rpc<int>('unread_announcement_count');
+      return count;
+    });
+  }
+
+  @override
+  Future<int> fetchTotalCount() {
+    return guardDb(
+        () => _client.from('announcements').count(CountOption.exact));
+  }
+
+  @override
+  Future<void> markAllRead() {
+    return guardDb(() async {
+      await _client.rpc<dynamic>('mark_all_announcements_read');
     });
   }
 

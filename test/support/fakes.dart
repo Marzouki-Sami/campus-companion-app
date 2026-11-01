@@ -17,21 +17,72 @@ class FakeAnnouncementRepository implements AnnouncementRepository {
   final List<Announcement> items;
   final Set<String> readIds;
   bool failMarkRead = false;
+  bool offline = false;
+  int pageRequests = 0;
+
+  void _checkOnline() {
+    if (offline) throw const OfflineException();
+  }
 
   @override
-  Future<List<Announcement>> fetchAll() async => List.of(items);
+  Future<List<Announcement>> fetchPage({
+    required int offset,
+    required int limit,
+  }) async {
+    _checkOnline();
+    pageRequests++;
+    return items.skip(offset).take(limit).toList();
+  }
+
+  @override
+  Future<List<Announcement>> fetchUpcomingEvents({
+    required DateTime now,
+    int limit = 5,
+  }) async {
+    _checkOnline();
+    return items
+        .where((a) => a.isEvent && !a.eventOver!.isBefore(now))
+        .take(limit)
+        .toList();
+  }
+
+  @override
+  Future<int> fetchUnreadCount() async {
+    _checkOnline();
+    return items.where((a) => !readIds.contains(a.id)).length;
+  }
+
+  @override
+  Future<int> fetchTotalCount() async {
+    _checkOnline();
+    return items.length;
+  }
+
+  @override
+  Future<void> markAllRead() async {
+    _checkOnline();
+    readIds.addAll(items.map((a) => a.id));
+  }
 
   @override
   Future<void> save(
     Announcement announcement, {
     List<NewImage> newImages = const [],
-  }) async {}
+  }) async {
+    _checkOnline();
+  }
 
   @override
-  Future<void> delete(String id) async => items.removeWhere((a) => a.id == id);
+  Future<void> delete(String id) async {
+    _checkOnline();
+    items.removeWhere((a) => a.id == id);
+  }
 
   @override
-  Future<Set<String>> fetchReadIds() async => {...readIds};
+  Future<Set<String>> fetchReadIds() async {
+    _checkOnline();
+    return {...readIds};
+  }
 
   @override
   Future<void> markRead(Iterable<String> ids) async {

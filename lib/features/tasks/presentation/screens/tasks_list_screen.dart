@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/widgets/empty_state.dart';
+import 'package:campus_companion/core/widgets/offline_banner.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
 import 'package:campus_companion/features/tasks/domain/task.dart';
 import 'package:campus_companion/features/tasks/domain/task_filter.dart';
@@ -90,6 +91,7 @@ class _TasksListScreenState extends State<TasksListScreen> {
       ),
       body: Column(
         children: [
+          const OfflineBanner(),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
