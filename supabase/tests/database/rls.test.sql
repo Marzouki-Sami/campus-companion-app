@@ -1,6 +1,6 @@
 begin;
 
-select plan(49);
+select plan(52);
 
 -- Fixtures (run as the superuser, so auth.uid() is null and triggers trust us)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -265,6 +265,20 @@ select lives_ok(
   $$insert into public.announcement_reads (announcement_id)
     select id from public.announcements where title = 'Welcome!'$$,
   'a student can mark an announcement as read'
+);
+select is(
+  public.unread_announcement_count(),
+  (select count(*)::int from public.announcements) - 1,
+  'the unread count excludes what the student already read'
+);
+select lives_ok(
+  $$select public.mark_all_announcements_read()$$,
+  'a student can mark everything as read'
+);
+select is(
+  public.unread_announcement_count(),
+  0,
+  'nothing is unread afterwards'
 );
 select throws_ok(
   $$insert into public.announcement_reads (user_id, announcement_id)
