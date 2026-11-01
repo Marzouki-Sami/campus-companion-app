@@ -164,6 +164,19 @@ On a **physical Android phone**, forward the port so the phone can reach the loc
 
 Running without `env.json` shows a "Setup required" screen explaining the same steps.
 
+### Run it with Docker Compose (no Supabase CLI)
+
+If you would rather not install Node and the Supabase CLI, the whole backend runs in containers:
+
+```bash
+node tool/compose_env.mjs        # once: random secrets into .env and env.json (git-ignored)
+docker compose up -d             # database, auth, API, storage, functions, mail catcher
+docker compose run --rm seed     # optional: demo accounts and sample data
+flutter run --dart-define-from-file=env.json
+```
+
+The API is at http://127.0.0.1:8000 and caught emails (verification and reset codes) at http://127.0.0.1:8025. On a physical phone, forward the port with `adb reverse tcp:8000 tcp:8000`. Migrations in `supabase/migrations` are applied automatically (run `docker compose run --rm migrate` after adding one); `docker compose down -v` wipes everything. It is for local use only: plain HTTP and throwaway secrets. CI builds this stack from scratch on every pull request.
+
 ### Use your own Supabase project
 
 1. Create a project at [supabase.com](https://supabase.com) and run the migrations: `npx supabase link --project-ref <ref>` then `npx supabase db push`, then deploy the account-deletion function: `npx supabase functions deploy admin-delete-user`.
