@@ -111,15 +111,29 @@ const categoryId = Object.fromEntries(categories.map((c) => [c.name, c.id]));
 const professorId = ids['demoprofessor@campus-companion.test'];
 const announcements = [
   ['Midterm schedule published', 'The midterm exam timetable is now available on the student portal. Check your room assignment carefully.', 'Exams', 1],
-  ['Career fair next Thursday', 'More than 40 companies will be on campus. Bring your CV and register at the front desk.', 'Events', 2],
+  ['Career fair next Thursday', 'More than 40 companies will be on campus. Bring your CV and register at the front desk.', 'Events', 2, { daysAhead: 4, hours: 3, location: 'Main hall' }],
   ['Library opening hours extended', 'During exam season the library stays open until midnight, Monday to Saturday.', 'Campus life', 3],
-  ['Hackathon registration open', 'Form teams of up to four people and sign up before Friday.', 'Events', 5],
+  ['Hackathon registration open', 'Form teams of up to four people and sign up before Friday.', 'Events', 5, { daysAhead: 9, hours: 8, location: 'Engineering building, room B2' }],
 ];
-for (const [title, body, category, ageInDays] of announcements) {
+for (const [title, body, category, ageInDays, event] of announcements) {
+  const start = event ? new Date(daysFromNow(event.daysAhead)) : null;
+  if (start) start.setUTCHours(13, 0, 0, 0);
   const [row] = await call(
     'POST',
     '/rest/v1/announcements',
-    [{ title, body, created_by: professorId, created_at: daysFromNow(-ageInDays) }],
+    [
+      {
+        title,
+        body,
+        created_by: professorId,
+        created_at: daysFromNow(-ageInDays),
+        ...(start && {
+          event_start: start.toISOString(),
+          event_end: new Date(start.getTime() + event.hours * 3600000).toISOString(),
+          location: event.location,
+        }),
+      },
+    ],
     { Prefer: 'return=representation' },
   );
   await call('POST', '/rest/v1/announcement_categories', [

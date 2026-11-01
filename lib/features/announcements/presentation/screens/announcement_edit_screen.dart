@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
 import 'package:campus_companion/features/announcements/domain/announcement_image.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
+import 'package:campus_companion/features/announcements/presentation/widgets/event_fields.dart';
 import 'package:campus_companion/features/announcements/presentation/widgets/photo_editor.dart';
 import 'package:campus_companion/features/categories/presentation/providers/category_provider.dart';
 
@@ -27,6 +28,11 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _title;
   late final TextEditingController _body;
+  late final TextEditingController _location;
+  late bool _isEvent;
+  DateTime? _start;
+  DateTime? _end;
+  String? _eventError;
   late final Set<String> _selectedCategoryIds;
   late List<AnnouncementImage> _storedImages;
   List<NewImage> _addedImages = const [];
@@ -38,6 +44,10 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
     super.initState();
     _title = TextEditingController(text: _existing?.title ?? '');
     _body = TextEditingController(text: _existing?.body ?? '');
+    _location = TextEditingController(text: _existing?.location ?? '');
+    _isEvent = _existing?.isEvent ?? false;
+    _start = _existing?.eventStart;
+    _end = _existing?.eventEnd;
     _selectedCategoryIds = {...?_existing?.categories};
     _storedImages = [...?_existing?.images];
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -49,30 +59,44 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
   void dispose() {
     _title.dispose();
     _body.dispose();
+    _location.dispose();
     super.dispose();
+  }
+
+  String? _validateEvent() {
+    if (!_isEvent) return null;
+    final start = _start;
+    if (start == null) return 'Choose when the event starts.';
+    final end = _end;
+    if (end != null && end.isBefore(start)) {
+      return 'The event cannot end before it starts.';
+    }
+    return null;
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    final eventError = _validateEvent();
+    setState(() => _eventError = eventError);
+    if (eventError != null) return;
     final provider = context.read<AnnouncementProvider>();
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
 
     final existing = _existing;
-    final announcement = existing != null
-        ? existing.copyWith(
-            title: _title.text.trim(),
-            body: _body.text.trim(),
-            categories: _selectedCategoryIds.toList(),
-            images: _storedImages,
-          )
-        : Announcement(
-            id: '',
-            title: _title.text.trim(),
-            body: _body.text.trim(),
-            createdAt: DateTime.now(),
-            categories: _selectedCategoryIds.toList(),
-          );
+    final announcement = Announcement(
+      id: existing?.id ?? '',
+      title: _title.text.trim(),
+      body: _body.text.trim(),
+      createdAt: existing?.createdAt ?? DateTime.now(),
+      categories: _selectedCategoryIds.toList(),
+      images: _storedImages,
+      eventStart: _isEvent ? _start : null,
+      eventEnd: _isEvent ? _end : null,
+      location: _isEvent && _location.text.trim().isNotEmpty
+          ? _location.text.trim()
+          : null,
+    );
 
     final ok = await provider.addOrUpdateAnnouncement(
       announcement,
@@ -138,6 +162,26 @@ class _AnnouncementEditScreenState extends State<AnnouncementEditScreen> {
                 added: _addedImages,
                 onStoredChanged: (v) => setState(() => _storedImages = v),
                 onAddedChanged: (v) => setState(() => _addedImages = v),
+              ),
+              const SizedBox(height: 16),
+              EventFields(
+                isEvent: _isEvent,
+                start: _start,
+                end: _end,
+                location: _location,
+                errorText: _eventError,
+                onToggle: (v) => setState(() {
+                  _isEvent = v;
+                  _eventError = null;
+                }),
+                onStartChanged: (v) => setState(() {
+                  _start = v;
+                  _eventError = null;
+                }),
+                onEndChanged: (v) => setState(() {
+                  _end = v;
+                  _eventError = null;
+                }),
               ),
               const SizedBox(height: 24),
               Text('Categories', style: theme.textTheme.titleSmall),

@@ -1,6 +1,6 @@
 begin;
 
-select plan(35);
+select plan(41);
 
 -- Fixtures (run as the superuser, so auth.uid() is null and triggers trust us)
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -150,6 +150,41 @@ select is(
   (select count(*)::int from storage.objects where bucket_id = 'announcement-images'),
   1,
   'a professor can look up photo files (needed to delete them)'
+);
+select lives_ok(
+  $$select public.save_announcement(null, 'Open day', 'Come along', '{}',
+      '2030-05-01 09:00+00', '2030-05-01 12:00+00', '  Main hall  ')$$,
+  'a professor can publish an event with a place'
+);
+select is(
+  (select location from public.announcements where title = 'Open day'),
+  'Main hall',
+  'the place is trimmed'
+);
+select throws_ok(
+  $$select public.save_announcement(null, 'Backwards', 'Ends first', '{}',
+      '2030-05-01 12:00+00', '2030-05-01 09:00+00', null)$$,
+  '23514',
+  null,
+  'an event cannot end before it starts'
+);
+select throws_ok(
+  $$select public.save_announcement(null, 'Place only', 'No date', '{}',
+      null, null, 'Somewhere')$$,
+  '23514',
+  null,
+  'a place needs an event date'
+);
+select lives_ok(
+  $$select public.save_announcement(
+      (select id from public.announcements where title = 'Open day'),
+      'Open day', 'Come along', '{}')$$,
+  'editing without event details turns the event back into a plain announcement'
+);
+select is(
+  (select event_start from public.announcements where title = 'Open day'),
+  null,
+  'the event date was cleared'
 );
 select is(
   (select count(*)::int from public.profiles),
