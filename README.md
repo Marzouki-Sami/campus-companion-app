@@ -27,6 +27,7 @@
 | **Administration** | Tabbed dashboard to manage users (role, suspension, name, account deletion) and announcement categories |
 | **Accounts** | Email/password sign-up with **email verification** (6-digit code), a strong-password policy with a live checklist, **forgot-password** by emailed code, profile editing |
 | **Account safety** | Suspended or deleted accounts are blocked at sign-in, signed out when the app resumes, and denied by the database; breached passwords are refused |
+| **Offline and large lists** | The newest announcements, upcoming events, your tasks and profile are saved on the device and shown with an *offline* banner when there is no connection; older announcements load 20 at a time as you scroll. Changes need a connection (nothing is queued), and the saved copy is erased on sign-out |
 | **Appearance** | Light, dark or system theme, remembered on the device |
 
 Access control is enforced **in the database** with Postgres Row Level Security, not only in the UI. New accounts are always created as `student`, and only an admin can change a role.

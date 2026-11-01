@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:campus_companion/core/offline/local_cache.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcements_list_screen.dart';
 import 'package:campus_companion/features/auth/presentation/providers/auth_provider.dart';
@@ -78,6 +79,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _leaving = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      context.read<TaskProvider>().clear();
+      context.read<LocalCache>().clear();
       Navigator.pushNamedAndRemoveUntil(
         context,
         LoginScreen.routeName,

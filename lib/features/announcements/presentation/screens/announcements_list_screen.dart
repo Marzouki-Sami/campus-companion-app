@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:campus_companion/core/widgets/empty_state.dart';
+import 'package:campus_companion/core/widgets/offline_banner.dart';
 import 'package:campus_companion/features/announcements/domain/announcement.dart';
 import 'package:campus_companion/features/announcements/presentation/providers/announcement_provider.dart';
 import 'package:campus_companion/features/announcements/presentation/screens/announcement_detail_screen.dart';
@@ -118,6 +119,7 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
           : null,
       body: Column(
         children: [
+          const OfflineBanner(),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
@@ -217,23 +219,47 @@ class _AnnouncementsListScreenState extends State<AnnouncementsListScreen> {
       );
     }
 
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(bottom: 96),
-      itemCount: announcements.length,
-      itemBuilder: (context, index) {
-        final a = announcements[index];
-        return AnnouncementCard(
-          announcement: a,
-          isUnread: provider.isUnread(a.id),
-          categories: context.read<CategoryProvider>().categories,
-          onTap: () => Navigator.pushNamed(
-            context,
-            AnnouncementDetailScreen.routeName,
-            arguments: AnnouncementDetailArgs(announcement: a),
-          ),
-        );
+    final showFooter = provider.hasMore;
+    return NotificationListener<ScrollNotification>(
+      onNotification: (n) {
+        if (n.metrics.extentAfter < 400) provider.loadMore();
+        return false;
       },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(bottom: 96),
+        itemCount: announcements.length + (showFooter ? 1 : 0),
+        itemBuilder: (context, index) {
+          if (index == announcements.length) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: provider.isLoadingMore
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2.5),
+                      )
+                    : TextButton(
+                        onPressed: provider.loadMore,
+                        child: const Text('Load older announcements'),
+                      ),
+              ),
+            );
+          }
+          final a = announcements[index];
+          return AnnouncementCard(
+            announcement: a,
+            isUnread: provider.isUnread(a.id),
+            categories: context.read<CategoryProvider>().categories,
+            onTap: () => Navigator.pushNamed(
+              context,
+              AnnouncementDetailScreen.routeName,
+              arguments: AnnouncementDetailArgs(announcement: a),
+            ),
+          );
+        },
+      ),
     );
   }
 }

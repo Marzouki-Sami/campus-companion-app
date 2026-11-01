@@ -1,3 +1,9 @@
+/// There is no usable connection. Callers may fall back to saved data.
+class OfflineException extends AppException {
+  const OfflineException()
+      : super('No connection. Check your internet and try again.');
+}
+
 /// The signed-in session can no longer continue, and the user is told why.
 class SessionEndedException extends AppException {
   const SessionEndedException(super.message);
