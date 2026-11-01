@@ -34,18 +34,32 @@ Access control is enforced **in the database** with Postgres Row Level Security,
 
 ## Screenshots
 
+All screenshots come from a real phone running the app against the local demo data (generated sample photos, no personal data).
+
+### Everyday use
+
 <table>
   <tr>
-    <td><img src="docs/screenshots/01-login.png" alt="Login" width="220" /></td>
-    <td><img src="docs/screenshots/02-home.png" alt="Dashboard (dark)" width="220" /></td>
-    <td><img src="docs/screenshots/03-announcements.png" alt="Announcements (dark)" width="220" /></td>
-    <td><img src="docs/screenshots/04-announcement-detail.png" alt="Announcement detail" width="220" /></td>
+    <td><img src="docs/screenshots/07-home.png" alt="Dashboard" width="200" /></td>
+    <td><img src="docs/screenshots/08-home-events.png" alt="Upcoming events strip" width="200" /></td>
+    <td><img src="docs/screenshots/09-news.png" alt="News with pinned and unread" width="200" /></td>
+    <td><img src="docs/screenshots/10-event-detail.png" alt="Event with Add to calendar" width="200" /></td>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/05-tasks.png" alt="Tasks (dark)" width="220" /></td>
-    <td><img src="docs/screenshots/06-account.png" alt="Account" width="220" /></td>
-    <td><img src="docs/screenshots/07-admin-users.png" alt="Admin dashboard" width="220" /></td>
-    <td><img src="docs/screenshots/08-home-light.png" alt="Dashboard (light)" width="220" /></td>
+    <td><img src="docs/screenshots/12-tasks.png" alt="Tasks" width="200" /></td>
+    <td><img src="docs/screenshots/13-task-reminder.png" alt="Task reminder" width="200" /></td>
+    <td><img src="docs/screenshots/14-account.png" alt="Account" width="200" /></td>
+    <td><img src="docs/screenshots/06-appearance.png" alt="Theme choice" width="200" /></td>
+  </tr>
+</table>
+
+### Dark mode and offline
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/15-home-dark.png" alt="Dashboard (dark)" width="200" /></td>
+    <td><img src="docs/screenshots/16-news-dark.png" alt="News (dark)" width="200" /></td>
+    <td><img src="docs/screenshots/24-offline.png" alt="Offline banner with saved data" width="200" /></td>
   </tr>
 </table>
 
@@ -53,18 +67,32 @@ Access control is enforced **in the database** with Postgres Row Level Security,
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/10-register.png" alt="Registration with live password checklist" width="220" /></td>
-    <td><img src="docs/screenshots/11-verify-email.png" alt="Email verification code" width="220" /></td>
-    <td><img src="docs/screenshots/12-reset-password.png" alt="Reset password" width="220" /></td>
+    <td><img src="docs/screenshots/01-login.png" alt="Login" width="200" /></td>
+    <td><img src="docs/screenshots/02-register.png" alt="Registration with live password checklist" width="200" /></td>
+    <td><img src="docs/screenshots/03-verify-email.png" alt="Email verification code" width="200" /></td>
+    <td><img src="docs/screenshots/04-forgot-password.png" alt="Forgot password" width="200" /></td>
+    <td><img src="docs/screenshots/05-reset-password.png" alt="Reset password" width="200" /></td>
   </tr>
 </table>
 
-### Announcement photos and events
+### Publishing (professors and admins)
 
 <table>
   <tr>
-    <td><img src="docs/screenshots/13-announcement-photos.png" alt="Announcement with a swipeable photo carousel" width="220" /></td>
-    <td><img src="docs/screenshots/14-event-detail.png" alt="Event with date, place and Add to calendar" width="220" /></td>
+    <td><img src="docs/screenshots/17-new-announcement.png" alt="New announcement" width="200" /></td>
+    <td><img src="docs/screenshots/18-photo-picker.png" alt="Photo picker" width="200" /></td>
+    <td><img src="docs/screenshots/19-announcement-form-event.png" alt="Event, pin and photos" width="200" /></td>
+  </tr>
+</table>
+
+### Administration
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/20-admin-users.png" alt="Users" width="200" /></td>
+    <td><img src="docs/screenshots/21-admin-categories.png" alt="Categories" width="200" /></td>
+    <td><img src="docs/screenshots/22-admin-user-menu.png" alt="User actions" width="200" /></td>
+    <td><img src="docs/screenshots/23-admin-delete-dialog.png" alt="Delete confirmation" width="200" /></td>
   </tr>
 </table>
 
@@ -82,9 +110,9 @@ flowchart LR
 
 ```text
 lib/
-├── main.dart                 # Reads the config, builds the Supabase repositories, starts the app
+├── main.dart                 # Reads the config, builds the repositories (Supabase + offline cache), starts the app
 ├── app.dart                  # Dependency injection (Provider) and MaterialApp
-├── core/                     # Cross-cutting code: config, theme, routing, errors, shared widgets, utils
+├── core/                     # Cross-cutting code: config, theme, routing, errors, offline cache, shared widgets, utils
 └── features/
     ├── auth/                 # Sign-in, registration, roles
     ├── announcements/
@@ -101,7 +129,9 @@ lib/
 supabase/
 ├── migrations/               # Schema, Row Level Security policies, SQL functions
 └── tests/database/           # pgTAP tests that prove the policies hold
-tool/                         # Local setup and icon generation scripts
+functions/ (under supabase/) = Edge Functions: admin-delete-user
+docker-compose.yml + docker/   # The same backend in plain containers
+tool/                         # Local setup, compose secrets and icon generation scripts
 ```
 
 Why it is built this way:
@@ -128,7 +158,9 @@ Everything is denied by default and the [migration](supabase/migrations/20260101
 - Passwords are never stored or readable: Supabase Auth keeps only a bcrypt hash.
 - **Bot protection (optional).** With a [Cloudflare Turnstile](https://www.cloudflare.com/products/turnstile/) site key the app shows a short challenge before sign-in, sign-up, resending a code and password reset, and Supabase refuses requests without a valid token. Off by default so the project runs with no external account.
 - **Only an admin can delete an account**; users cannot delete their own. Deleting needs the service-role key, which must never ship in an app, so the app calls the [`admin-delete-user`](supabase/functions/admin-delete-user/index.ts) Edge Function. It verifies the caller's token, requires the admin role, refuses self-deletion, and then removes the user; the database cascades to their profile and tasks (announcements they wrote are kept).
-- Announcements are saved through one SQL function so the text and its categories change atomically.
+- Announcements are saved through one SQL function so the text, categories, event details and pin flag change atomically. Pinning is limited to professors and admins by the same policies as editing.
+- **Read state is private**: `announcement_reads` rows are visible only to their owner, not even to admins.
+- **Task reminders** are scheduled on the device from the task's own data; nothing about them leaves it.
 - **Photos** live in a Storage bucket that accepts only JPEG, PNG and WebP up to 5 MB, uploaded by professors and admins only; photos are shrunk to 1600 px on the device first, and the database refuses a ninth photo on an announcement. The bucket is public-read with unguessable paths, so anyone holding a link can view a photo; make it private and use signed URLs if your announcements are sensitive.
 - The [pgTAP tests](supabase/tests/database/rls.test.sql) attack these rules (self-promotion, reading other people's tasks, publishing as a student, ...) and run in CI.
 
@@ -193,7 +225,9 @@ flutter test                 # unit and widget tests, no backend needed
 npx supabase start && npx supabase test db   # database policy tests
 ```
 
-The Dart suite covers domain rules, row mapping, error translation, the providers (against in-memory fakes) and the login screen. [GitHub Actions](.github/workflows/ci.yml) runs formatting, analysis, the tests, a debug APK build and the database tests in parallel on every pull request.
+The Dart suite (115 tests) covers domain rules, row mapping, JSON codecs for the offline copy, offline fallback and pagination, reminder planning, the providers (against in-memory fakes) and the login screen. The pgTAP suite (52 tests) attacks the database policies: self-promotion, other people's tasks and read state, publishing and uploading as a student, a ninth photo, backwards event dates, and more.
+
+[GitHub Actions](.github/workflows/ci.yml) runs formatting, analysis, the tests, a debug APK build, the database tests and a from-scratch docker-compose smoke test in parallel on every pull request, plus a [secret scan](.github/workflows/secret-scan.yml); [Dependabot](.github/dependabot.yml) proposes updates weekly.
 
 ## Build
 
@@ -202,6 +236,8 @@ flutter build apk --release --dart-define-from-file=env.json
 ```
 
 The launcher icon is generated and reproducible: `python tool/generate_icon.py` (needs Pillow) followed by `dart run flutter_launcher_icons`.
+
+Known limits: changes made offline are not queued, and announcement photos are not kept for offline viewing.
 
 To publish the app, follow [docs/RELEASING.md](docs/RELEASING.md). Security issues: see [SECURITY.md](SECURITY.md).
 
